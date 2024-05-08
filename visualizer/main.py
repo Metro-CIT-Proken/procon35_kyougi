@@ -2,6 +2,7 @@ import sys
 
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
+from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import *
 import json
 import numpy as np
@@ -16,6 +17,7 @@ FIRST = 100
 class Widget(QWidget):
     def __init__(self, parent=None):
         super(Widget, self).__init__(parent)
+        self.setWindowTitle('Test GUI')
         self.setGeometry(300, 50, 1000, 1000)
         with open('./problem.json') as f:
             self.problem = json.load(f)
@@ -28,13 +30,17 @@ class Widget(QWidget):
         self.goal_board = [[ int(self.problem['board']['goal'][y][x]) for x in range(self.b_wid)]for y in range(self.b_hei)]#完成盤面
         self.idx = 0
         self.next = self.b_wid*CELL_SIZE+100
-        self.opTimerCallback
         self.start_play
         self.button_push
+        self.opTimerCallback
         self.timer = QTimer()
-        self.timer.setInterval(1000)
+        self.timer_oth = QTimer()
+        self.timer.setInterval(500)
         self.timer.timeout.connect(self.opTimerCallback)
+        self.timer_oth.timeout.connect(self.opTimerCallback)
         self.op_idx = 0#何番目手か
+        self.right_key_check = False
+
 
 
 
@@ -45,10 +51,10 @@ class Widget(QWidget):
 
 
     def paintEvent(self, event):
-        button = QPushButton("button",self)
-        painter = QPainter(self)
         layout = QVBoxLayout()
-        self.setLayout(layout)
+        button = QPushButton("button",self)
+        button.setFixedSize(100, 50)
+        painter = QPainter(self)
         painter.setPen(QColor("black"))
         painter.setBrush(QColor("white"))
 
@@ -67,16 +73,28 @@ class Widget(QWidget):
                 rect = QRect(j*CELL_SIZE+self.next+FIRST,i*CELL_SIZE+FIRST,CELL_SIZE,CELL_SIZE)
                 painter.drawRect(rect)
                 painter.drawText(point,str(self.goal_board[i][j]))
-        button.clicked.connect(self.start_play)
-        button.setFixedSize(100, 50)
+        button.clicked.connect(self.button_push)
         layout.addWidget(button)
+        self.setLayout(layout)
 
 
+
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key.Key_Right and not(self.op_idx == self.answer["n"]):
+            self.right_key_check = self.applyOn(self.op_idx+1)
+            print("Right")
+
+        elif event.key() == Qt.Key.Key_Left and not(self.op_idx == 0):
+            self.right_key_check = self.applyOn(self.op_idx-1)
+            print("Left")
 
     def opTimerCallback(self):
+
         self.applyOn(self.op_idx+1)
         if self.op_idx == self.answer["n"]:
-            self.timer.stop()
+                self.timer.stop()
+
+
 
     def applyOn(self,idx):
         #手を
@@ -109,14 +127,6 @@ class Widget(QWidget):
             for i in range(x,0,-1):
                 self.start_board[y][i],self.start_board[y][i-1] = self.start_board[y][i-1],self.start_board[y][i]#右方向にずらす
         self.op_idx += 1
-
-
-
-
-
-
-
-
 
 
 
@@ -163,10 +173,12 @@ class Widget(QWidget):
 
 
 
+
 def main():
     app = QApplication(sys.argv)
     w = Widget()
-    w.start_play()
+
+    # w.start_play()
     w.show()
     w.raise_()
     app.exec()
