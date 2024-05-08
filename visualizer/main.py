@@ -40,6 +40,7 @@ class Widget(QWidget):
         self.timer_oth.timeout.connect(self.opTimerCallback)
         self.op_idx = 0#何番目手か
         self.right_key_check = False
+        self.color = {0:"red",1:"blue",2:"green",3:"yellow"}
 
 
 
@@ -51,18 +52,21 @@ class Widget(QWidget):
 
 
     def paintEvent(self, event):
-        layout = QVBoxLayout()
-        button = QPushButton("button",self)
-        button.setFixedSize(100, 50)
+        # layout = QVBoxLayout()
+        # button = QPushButton("button",self)
+        # button.setFixedSize(100, 50)
         painter = QPainter(self)
         painter.setPen(QColor("black"))
         painter.setBrush(QColor("white"))
 
+
         for i in range(0,self.b_hei):
             for j in range(0,self.b_wid):
+
                 point = QPoint(j* CELL_SIZE+TEXT_LOCATION+FIRST,i*CELL_SIZE+TEXT_LOCATION+FIRST)
                 rect = QRect(j*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,CELL_SIZE,CELL_SIZE)
-                painter.drawRect(rect)
+                rect_color = QColor(self.color[self.start_board[i][j]])
+                painter.fillRect(rect,rect_color)
                 painter.drawText(point,str(self.start_board[i][j]))
 
 
@@ -71,25 +75,27 @@ class Widget(QWidget):
 
                 point = QPoint(j* CELL_SIZE+TEXT_LOCATION+self.next+FIRST,i*CELL_SIZE+TEXT_LOCATION+FIRST)
                 rect = QRect(j*CELL_SIZE+self.next+FIRST,i*CELL_SIZE+FIRST,CELL_SIZE,CELL_SIZE)
-                painter.drawRect(rect)
+                rect_color = QColor(self.color[self.goal_board[i][j]])
+                painter.fillRect(rect,rect_color)
                 painter.drawText(point,str(self.goal_board[i][j]))
-        button.clicked.connect(self.button_push)
-        layout.addWidget(button)
-        self.setLayout(layout)
+        # button.clicked.connect(self.button_push)
+        # layout.addWidget(button)
+        # # self.setLayout(layout)
 
 
 
     def keyPressEvent(self, event: QKeyEvent):
+        #右キーを押すと一手進む
         if event.key() == Qt.Key.Key_Right and not(self.op_idx == self.answer["n"]):
             self.right_key_check = self.applyOn(self.op_idx+1)
-            print("Right")
-
+            print("進む")
+        #左キーに進むと一手戻る
         elif event.key() == Qt.Key.Key_Left and not(self.op_idx == 0):
             self.right_key_check = self.applyOn(self.op_idx-1)
-            print("Left")
+            print("戻る")
 
+    #0.5秒ごとに進む・戻る
     def opTimerCallback(self):
-
         self.applyOn(self.op_idx+1)
         if self.op_idx == self.answer["n"]:
                 self.timer.stop()
@@ -106,8 +112,9 @@ class Widget(QWidget):
                 self.apply_backward()
         self.op_idx == idx
         self.update()
-
+    #一手進める
     def apply_forward(self):
+        print(self.op_idx)
         x = self.answer["ops"][self.op_idx]["x"]
         y = self.answer["ops"][self.op_idx]["y"]
         s = self.answer["ops"][self.op_idx]["s"]
@@ -129,35 +136,36 @@ class Widget(QWidget):
         self.op_idx += 1
 
 
-
+    #一手戻る
     def apply_backward(self):
-        x = self.answer["ops"][self.op_idx]["x"]
-        y = self.answer["ops"][self.op_idx]["y"]
-        s = self.answer["ops"][self.op_idx]["s"]
+        print(self.op_idx)
+        x = self.answer["ops"][self.op_idx-1]["x"]
+        y = self.answer["ops"][self.op_idx-1]["y"]
+        s = self.answer["ops"][self.op_idx-1]["s"]
         board_x_size = len(self.start_board[0])#ボードの横の大きさ
         board_y_size = len(self.start_board)#ボードの縦の大きさ
         if s == 0:
-            for i in range(board_y_size-1,y+1,-1):
+            for i in range(board_y_size-1,y,-1):
                 self.start_board[i-1][x],self.start_board[i][x] = self.start_board[i][x],self.start_board[i-1][x]
         elif s == 1:
-            for i in range(0,y-1,1):
+            for i in range(0,y):
                 self.start_board[i][x],self.start_board[i+1][x] = self.start_board[i+1][x],self.start_board[i][x]
 
         elif s == 2:
-            for i in range(board_x_size-1,x+1,-1):
+            for i in range(board_x_size-1,x,-1):
                 self.start_board[y][i],self.start_board[y][i-1] = self.start_board[y][i-1],self.start_board[y][i]
 
         else:
-            for i in range(0,x-1,1):
+            for i in range(0,x):
                 self.start_board[y][i],self.start_board[y][i+1] = self.start_board[y][i+1],self.start_board[y][i]
         self.op_idx -= 1
 
+    #タイマーを開始させる
     def start_play(self):
         #qTimerを作る
         self.timer.start()
-
-    def button_push(self):
-        print("button pushed!")
+    def button_push():
+        print("pushed! button")
 
 
 
@@ -178,7 +186,7 @@ def main():
     app = QApplication(sys.argv)
     w = Widget()
 
-    # w.start_play()
+    w.start_play()
     w.show()
     w.raise_()
     app.exec()
