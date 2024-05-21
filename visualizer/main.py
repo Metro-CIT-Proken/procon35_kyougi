@@ -1,5 +1,6 @@
 import sys
 
+from collections import deque
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtGui import QKeyEvent
@@ -7,10 +8,10 @@ from PyQt6.QtWidgets import *
 import json
 import numpy as np
 
-CELL_SIZE = 50
-TEXT_LOCATION = 25
-GAP = 100
-FIRST = 100
+CELL_SIZE = 50 #一辺のセルの長さ
+TEXT_LOCATION = 25 #テキストとセルの端との感覚
+GAP = 100 #スタートボードとゴールボードとの間隔
+FIRST = 100 #GUIの端とスタートボードとの感覚
 
 
 
@@ -37,14 +38,19 @@ class Widget(QWidget):
         self.timer_oth = QTimer()
         self.timer.setInterval(500)
         self.timer.timeout.connect(self.opTimerCallback)
-        self.timer_oth.timeout.connect(self.opTimerCallback)
         self.op_idx = 0#何番目手か
         self.right_key_check = False
         self.color = {0:"red",1:"blue",2:"green",3:"yellow"}
-
-
-
-
+        self.dict_action = {0:"上",1:"下",2:"左",3:"右"}
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+        self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.slider.setMinimum(0)
+        self.slider.setMaximum(self.answer["n"])
+        self.slider.setTickInterval(1)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.slider.valueChanged.connect(self.onSliderChange)
+        layout.addWidget(self.slider)
 
 
 
@@ -52,36 +58,126 @@ class Widget(QWidget):
 
 
     def paintEvent(self, event):
-        # layout = QVBoxLayout()
+
         # button = QPushButton("button",self)
         # button.setFixedSize(100, 50)
+
+        if not(self.op_idx >= self.answer["n"]):
+            x = self.answer["ops"][self.op_idx]["x"]
+            y = self.answer["ops"][self.op_idx]["y"]
+            s = self.answer["ops"][self.op_idx]["s"]
+
+
         painter = QPainter(self)
         painter.setPen(QColor("black"))
+        count_point = QPoint(30,20)
+        action_text_point = QPoint(30,40)
+        painter.drawText(count_point,f'{self.op_idx}手目 あと {self.answer["n"]-self.op_idx}手')
+        if not(self.op_idx >= self.answer["n"]):
+            painter.drawText(action_text_point,f'座標: x:{x}y:{y} 次の行動: {self.dict_action[s]} にずらす' )
         painter.setBrush(QColor("white"))
 
-
+        font = painter.font()
         for i in range(0,self.b_hei):
             for j in range(0,self.b_wid):
+
+                if not(self.op_idx >= self.answer["n"]):
+                    if i==y and j==x :
+                        print(self.search_near_goal(i,j))
+                        if self.start_board[y][x] != 0:
+                            line_pen = QPen(QColor("black"),5,Qt.PenStyle.SolidLine)
+                            #枠に太線をつける
+                            painter.setPen(line_pen)
+                            painter.drawLine(j*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,j*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
+                            painter.drawLine(j*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST)
+                            painter.drawLine((j+1)*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
+                            painter.drawLine(j*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
+                            #
+                            #
+                            painter.setPen(QColor(self.color[self.start_board[y][x]-1]))
+                        else:
+                            painter.setPen(QColor(self.color[3]))
+                        font = painter.font()
+                        font.setBold(True)
+                        painter.setFont(font)
 
                 point = QPoint(j* CELL_SIZE+TEXT_LOCATION+FIRST,i*CELL_SIZE+TEXT_LOCATION+FIRST)
                 rect = QRect(j*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,CELL_SIZE,CELL_SIZE)
                 rect_color = QColor(self.color[self.start_board[i][j]])
                 painter.fillRect(rect,rect_color)
-                painter.drawText(point,str(self.start_board[i][j]))
+                #ずらす方向の矢印をつける
+                if not(self.op_idx >= self.answer["n"]):
+                    if (j == x and i < y) and self.dict_action[s] == "下":
+                            painter.drawText(point,f'{str(self.start_board[i][j])}↓')
+                    elif (j == x and i > y) and  self.dict_action[s] == "上":
+
+                            painter.drawText(point,f'{str(self.start_board[i][j])}↑')
+                    elif (i == y and j > x) and  self.dict_action[s] == "左":
+                            painter.drawText(point,f'{str(self.start_board[i][j])}←')
+                    elif (i == y and j < x )and  self.dict_action[s] == "右":
+                            painter.drawText(point,f'{str(self.start_board[i][j])}→')
+                    else:
+                        painter.drawText(point,str(self.start_board[i][j]))
+
+
+                    if i==y and j==x :
+                            if self.start_board[y][x] != 0:
+                                line_pen = QPen(QColor("black"),5,Qt.PenStyle.SolidLine)
+                                painter.setPen(line_pen)
+                                painter.drawLine((j+1)*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
+                                painter.drawLine(j*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
+                                painter.setPen(QColor(self.color[self.start_board[y][x]-1]))
+                else:
+                    painter.drawText(point,str(self.start_board[i][j]))
+                painter.setPen(QColor("black"))
+                font.setBold(False)
+                painter.setFont(font)
 
 
         for i in range(0,self.b_hei):
             for j in range(0,self.b_wid):
-
+                if self.goal_board[i][j] == self.start_board[i][j]:
+                    rect_color = QColor("purple")
+                else:
+                    rect_color = QColor(self.color[self.goal_board[i][j]])
                 point = QPoint(j* CELL_SIZE+TEXT_LOCATION+self.next+FIRST,i*CELL_SIZE+TEXT_LOCATION+FIRST)
                 rect = QRect(j*CELL_SIZE+self.next+FIRST,i*CELL_SIZE+FIRST,CELL_SIZE,CELL_SIZE)
-                rect_color = QColor(self.color[self.goal_board[i][j]])
                 painter.fillRect(rect,rect_color)
                 painter.drawText(point,str(self.goal_board[i][j]))
         # button.clicked.connect(self.button_push)
         # layout.addWidget(button)
-        # # self.setLayout(layout)
 
+    def search_near_goal(self,x,y):
+        que = deque()
+        search_board = [[-1 for x in range(self.b_wid)]for y in range(self.b_hei)]
+        for i in range(0,len(search_board)):
+            print(search_board[i])
+        search_board[y][x] = 0
+        que.append((y,x))
+        dy = [1,0,-1,0]
+        dx = [0,-1,0,1]
+        while que:
+            h,w = que.popleft()
+            for i in range(4):
+                print(que)
+                next_h = h + dy[i]
+                next_w = w + dx[i]
+                if 0 <= next_h < len(search_board) and 0 <= next_w < len(search_board[0]) and not(self.start_board[next_h][next_w]==self.goal_board[next_h][next_w]):
+                    if search_board[next_h][next_w] == -1:
+                        search_board[next_h][next_w] = search_board[h][w]+1
+                        que.append((next_h,next_w))
+                    if self.start_board[next_h][next_w] == self.goal_board[next_h][next_w]:
+                        return search_board[next_h][next_w]
+            for i in range(len(search_board)):
+                print(search_board[i])
+
+
+
+
+
+
+    def onSliderChange(self,value):
+        self.applyOn(value)
 
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -169,24 +265,10 @@ class Widget(QWidget):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 def main():
     app = QApplication(sys.argv)
     w = Widget()
-
-    w.start_play()
+    # w.start_play()
     w.show()
     w.raise_()
     app.exec()
