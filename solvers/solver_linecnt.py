@@ -73,18 +73,38 @@ for y in range(height):
         # 抜き型を実際に適用して解答を作る
         # 交換対象が元のセルより右側にある場合
         if x < swapx:
-            # 左づめだから2
-            answer.extend([Act(0, px, swapy, 2) for px in reversed(range(x, swapx))])
-            start[swapy][x:swapx + 1] = reversed(start[swapy][x:swapx + 1])
+            for px in reversed(range(x, swapx)):
+                print("==========")
+                print(swapy, px, "左")
+                # 左づめだから2
+                answer.append(Act(0, px, swapy, 2))
+                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+                print()
+                start[swapy][px:width - 1], start[swapy][width - 1] =  start[swapy][px + 1:width], start[swapy][px]
+                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
         else:
-            # 右詰めだから3
-            answer.extend([Act(0, px, swapy, 3) for px in range(swapx, x)])
-            start[swapy][swapx:x + 1] = reversed(start[swapy][swapx:x + 1])
+            for px in range(swapx + 1, x + 1):
+                print("==========")
+                print(swapy, px, "右")
+                # 左づめだから2
+                answer.append(Act(0, px, swapy, 3))
+                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+                print()
+                start[swapy][1:px + 1], start[swapy][0] =  start[swapy][0:px], start[swapy][px]
+                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
         
-        # 上詰めだから0
-        answer.extend([Act(0, x, py, 0) for py in reversed(range(y, swapy))])
-        for i in range((swapy - y + 2) // 2):
-            start[y + i][x], start[swapy - i][x] = start[swapy - i][x], start[y + i][x]
+        for py in reversed(range(y, swapy)):
+                print("==========")
+                print(py, x, "上")
+                # 上づめだから0
+                answer.append(Act(0, x, py, 0))
+                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+                print()
+                tmp = start[py][x]
+                for i in range(py, height - 1):
+                    start[i][x] = start[i + 1][x]
+                start[height - 1][x] = tmp
+                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
         
         # 整数値の個数を再計算する
         start_cnt.clear()
@@ -103,15 +123,28 @@ for y in range(height):
         for sx in range(x + 1, width):
             # 交換先のセルを見つけたなら
             if start[y][sx] == goal[y][x]:
-                # 左詰め
-                answer.extend([Act(0, px, y, 2) for px in reversed(range(x, sx))])
-                start[y][x:sx + 1] = reversed(start[y][x:sx + 1])
+                for px in reversed(range(x, sx)):
+                    print("==========")
+                    print(y, px, "左")
+                    print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+                    print()
+                    tmp = start[y][px]
+                    start[y][px:width-1] = start[y][px+1:width]
+                    start[y][width-1] = tmp
+                    answer.append(Act(0, px, y, 2))
+                    print("\n".join([" ".join([str(x) for x in line]) for line in start]))
                 break
 
-print(len(answer))
-print("\n".join(map(str, start)))
-print()
-print("\n".join(map(str, goal)))
-print()
-for ops in answer:
-    print("%d %d %d %d" % (ops.p, ops.x, ops.y, ops.s))
+with open("answer.json", "w") as f:
+    f.write(json.dumps({
+        "n": len(answer),
+        "ops": [
+            {
+                "p": ops.p,
+                "x": ops.x,
+                "y": ops.y,
+                "s": ops.s
+            }
+            for ops in answer
+        ]
+    }))
