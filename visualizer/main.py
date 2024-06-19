@@ -8,7 +8,8 @@ from PyQt6.QtWidgets import *
 import json
 import numpy as np
 
-CELL_SIZE = 50 #一辺のセルの長さ
+
+CELL_SIZE = 40 #一辺のセルの長さ
 TEXT_LOCATION = 25 #テキストとセルの端との感覚
 GAP = 100 #スタートボードとゴールボードとの間隔
 FIRST = 100 #GUIの端とスタートボードとの感覚
@@ -20,15 +21,17 @@ class Widget(QWidget):
         super(Widget, self).__init__(parent)
         self.setWindowTitle('Test GUI')
         self.setGeometry(300, 50, 1000, 1000)
-        with open('./problem.json') as f:
+        self.args = sys.argv
+        with open(self.args[1]) as f:
             self.problem = json.load(f)
-        with open('./answer.json') as f:
+        with open(self.args[2]) as f:
             self.answer = json.load(f)
 
         self.b_wid = self.problem['board']['width']
         self.b_hei = self.problem['board']['height']
         self.start_board =  [[ int(self.problem['board']['start'][y][x]) for x in range(self.b_wid)]for y in range(self.b_hei)]#スタート盤面
         self.goal_board = [[ int(self.problem['board']['goal'][y][x]) for x in range(self.b_wid)]for y in range(self.b_hei)]#完成盤面
+        self.dis_board = [[0 for x in range(self.b_wid)]for y in range(self.b_hei)]
         self.idx = 0
         self.next = self.b_wid*CELL_SIZE+100
         self.start_play
@@ -40,7 +43,7 @@ class Widget(QWidget):
         self.timer.timeout.connect(self.opTimerCallback)
         self.op_idx = 0#何番目手か
         self.right_key_check = False
-        self.color = {0:"red",1:"blue",2:"green",3:"yellow"}
+        self.color = {0:0,1:0,2:0,3:0}
         self.dict_action = {0:"上",1:"下",2:"左",3:"右"}
         layout = QVBoxLayout()
         self.setLayout(layout)
@@ -78,32 +81,33 @@ class Widget(QWidget):
         painter.setBrush(QColor("white"))
 
         font = painter.font()
+
         for i in range(0,self.b_hei):
             for j in range(0,self.b_wid):
-
                 if not(self.op_idx >= self.answer["n"]):
                     if i==y and j==x :
-                        print(self.search_near_goal(i,j))
+                        line_pen = QPen(QColor("black"),5,Qt.PenStyle.SolidLine)
+                            #枠に太線をつける
+                        painter.setPen(line_pen)
+                        painter.drawLine(j*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,j*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
+                        painter.drawLine(j*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST)
+                        painter.drawLine((j+1)*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
+                        painter.drawLine(j*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
+                        #
                         if self.start_board[y][x] != 0:
                             line_pen = QPen(QColor("black"),5,Qt.PenStyle.SolidLine)
-                            #枠に太線をつける
-                            painter.setPen(line_pen)
-                            painter.drawLine(j*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,j*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
-                            painter.drawLine(j*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST)
-                            painter.drawLine((j+1)*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
-                            painter.drawLine(j*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
-                            #
-                            #
                             painter.setPen(QColor(self.color[self.start_board[y][x]-1]))
                         else:
                             painter.setPen(QColor(self.color[3]))
                         font = painter.font()
                         font.setBold(True)
                         painter.setFont(font)
-
                 point = QPoint(j* CELL_SIZE+TEXT_LOCATION+FIRST,i*CELL_SIZE+TEXT_LOCATION+FIRST)
                 rect = QRect(j*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,CELL_SIZE,CELL_SIZE)
-                rect_color = QColor(self.color[self.start_board[i][j]])
+                ratio = self.search_near_goal(j,i)/max(self.b_hei,self.b_wid)#距離が遠ければ色が薄くなり近くなれば濃くなる
+                saturation = 90*(1-ratio)
+                rect_color = QColor()
+                rect_color.setHsv(self.color[self.start_board[i][j]]*60,int(saturation*255//100),255)
                 painter.fillRect(rect,rect_color)
                 #ずらす方向の矢印をつける
                 if not(self.op_idx >= self.answer["n"]):
@@ -121,12 +125,13 @@ class Widget(QWidget):
 
 
                     if i==y and j==x :
-                            if self.start_board[y][x] != 0:
-                                line_pen = QPen(QColor("black"),5,Qt.PenStyle.SolidLine)
-                                painter.setPen(line_pen)
-                                painter.drawLine((j+1)*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
-                                painter.drawLine(j*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
-                                painter.setPen(QColor(self.color[self.start_board[y][x]-1]))
+                        line_pen = QPen(QColor("black"),5,Qt.PenStyle.SolidLine)
+                        painter.setPen(line_pen)
+                        painter.drawLine((j+1)*CELL_SIZE+FIRST,i*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
+                        painter.drawLine(j*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST,(j+1)*CELL_SIZE+FIRST,(i+1)*CELL_SIZE+FIRST)
+                        if self.start_board[y][x] != 0:
+                            painter.setPen(QColor(self.color[self.start_board[y][x]-1]))
+
                 else:
                     painter.drawText(point,str(self.start_board[i][j]))
                 painter.setPen(QColor("black"))
@@ -139,56 +144,48 @@ class Widget(QWidget):
                 if self.goal_board[i][j] == self.start_board[i][j]:
                     rect_color = QColor("purple")
                 else:
-                    rect_color = QColor(self.color[self.goal_board[i][j]])
+                    rect_color = QColor()
+                    rect_color.setHsv(self.color[self.goal_board[i][j]]*60,90*255//100,255)
                 point = QPoint(j* CELL_SIZE+TEXT_LOCATION+self.next+FIRST,i*CELL_SIZE+TEXT_LOCATION+FIRST)
                 rect = QRect(j*CELL_SIZE+self.next+FIRST,i*CELL_SIZE+FIRST,CELL_SIZE,CELL_SIZE)
                 painter.fillRect(rect,rect_color)
                 painter.drawText(point,str(self.goal_board[i][j]))
-        # button.clicked.connect(self.button_push)
-        # layout.addWidget(button)
 
-    def search_near_goal(self,x,y):
+    def search_near_goal(self,x,y):#幅優先探索で今の盤面からゴールの盤面の距離を計算している
         que = deque()
         search_board = [[-1 for x in range(self.b_wid)]for y in range(self.b_hei)]
-        for i in range(0,len(search_board)):
-            print(search_board[i])
         search_board[y][x] = 0
+        if self.start_board[y][x] == self.goal_board[y][x]:
+            return search_board[y][x]
         que.append((y,x))
         dy = [1,0,-1,0]
         dx = [0,-1,0,1]
         while que:
             h,w = que.popleft()
             for i in range(4):
-                print(que)
                 next_h = h + dy[i]
                 next_w = w + dx[i]
-                if 0 <= next_h < len(search_board) and 0 <= next_w < len(search_board[0]) and not(self.start_board[next_h][next_w]==self.goal_board[next_h][next_w]):
+                if 0 <= next_h < len(search_board) and 0 <= next_w < len(search_board[0]):
                     if search_board[next_h][next_w] == -1:
                         search_board[next_h][next_w] = search_board[h][w]+1
                         que.append((next_h,next_w))
-                    if self.start_board[next_h][next_w] == self.goal_board[next_h][next_w]:
+                    if self.start_board[y][x] == self.goal_board[next_h][next_w]:#ゴールした場合
                         return search_board[next_h][next_w]
-            for i in range(len(search_board)):
-                print(search_board[i])
-
-
-
 
 
 
     def onSliderChange(self,value):
         self.applyOn(value)
+        self.slider.setValue(self.op_idx)
 
 
     def keyPressEvent(self, event: QKeyEvent):
         #右キーを押すと一手進む
         if event.key() == Qt.Key.Key_Right and not(self.op_idx == self.answer["n"]):
             self.right_key_check = self.applyOn(self.op_idx+1)
-            print("進む")
         #左キーに進むと一手戻る
         elif event.key() == Qt.Key.Key_Left and not(self.op_idx == 0):
             self.right_key_check = self.applyOn(self.op_idx-1)
-            print("戻る")
 
     #0.5秒ごとに進む・戻る
     def opTimerCallback(self):
@@ -196,15 +193,19 @@ class Widget(QWidget):
         if self.op_idx == self.answer["n"]:
                 self.timer.stop()
 
-
+    def print_distance_board(self):
+        self.dis_board = [[self.search_near_goal(x,y) for x in range(self.b_wid)]for y in range(self.b_hei)]
+        print("------------------距離ボード--------------")
+        for i in range(len(self.dis_board)):
+            print(self.dis_board[i])
 
     def applyOn(self,idx):
         #手を
         if idx > self.op_idx:#未来を指定した場合
-            for i in range(0,idx-self.op_idx):
+            # for i in range(0,idx-self.op_idx):
                 self.apply_forward()
         else:#過去を指定した場合
-            for i in range(0,self.op_idx-idx):
+            #for i in range(0,self.op_idx-idx):
                 self.apply_backward()
         self.op_idx == idx
         self.update()
@@ -214,7 +215,6 @@ class Widget(QWidget):
         x = self.answer["ops"][self.op_idx]["x"]
         y = self.answer["ops"][self.op_idx]["y"]
         s = self.answer["ops"][self.op_idx]["s"]
-
         board = self.start_board
 
         if s == 0:
@@ -242,18 +242,18 @@ class Widget(QWidget):
         board_y_size = len(self.start_board)#ボードの縦の大きさ
         if s == 0:
             for i in range(board_y_size-1,y,-1):
-                self.start_board[i-1][x],self.start_board[i][x] = self.start_board[i][x],self.start_board[i-1][x]
+                self.start_board[i-1][x],self.start_board[i][x] = self.start_board[i][x],self.start_board[i-1][x]#上方向のずれを戻す
         elif s == 1:
             for i in range(0,y):
-                self.start_board[i][x],self.start_board[i+1][x] = self.start_board[i+1][x],self.start_board[i][x]
+                self.start_board[i][x],self.start_board[i+1][x] = self.start_board[i+1][x],self.start_board[i][x]#下方向のずれを戻す
 
         elif s == 2:
             for i in range(board_x_size-1,x,-1):
-                self.start_board[y][i],self.start_board[y][i-1] = self.start_board[y][i-1],self.start_board[y][i]
+                self.start_board[y][i],self.start_board[y][i-1] = self.start_board[y][i-1],self.start_board[y][i]#左方向のずれを戻す
 
         else:
             for i in range(0,x):
-                self.start_board[y][i],self.start_board[y][i+1] = self.start_board[y][i+1],self.start_board[y][i]
+                self.start_board[y][i],self.start_board[y][i+1] = self.start_board[y][i+1],self.start_board[y][i]#右方向のずれを戻す
         self.op_idx -= 1
 
     #タイマーを開始させる
