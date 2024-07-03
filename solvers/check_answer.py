@@ -27,11 +27,14 @@ for i in range(len(ops)):
     x = op["x"]
     y = op["y"]
     s = op["s"]
+    p = op["p"]
 
-    print("==========")
-    print(y, x, "上下左右"[s])
-    print("\n".join([" ".join([str(x) for x in line]) for line in start]))
-    print()
+    assert p != 1, "1x1の抜き型のみ対応しています"
+
+    # print("==========")
+    # print(y, x, "上下左右"[s])
+    # print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+    # print()
 
     tmp = start[y:y+1, x:x+1].copy()
     if s == 0:
@@ -47,4 +50,7 @@ for i in range(len(ops)):
         start[y:y+1, 1:x+1] = start[y:y+1, 0:x]
         start[y:y+1, 0:1] = tmp
 
-    print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+    # print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+
+is_correct = np.all(start == goal)
+print("correct" if is_correct else "incorrect")
