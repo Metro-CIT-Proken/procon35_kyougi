@@ -10,6 +10,7 @@ import json
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
+import cv2
 import numpy as np
 
 WIDTH = 1000
@@ -32,12 +33,42 @@ class OpenGLWidget(QOpenGLWidget):
         self.setMinimumSize(100, 100)
         self.setMaximumSize(400, 400)
 
+
+
+
+    def write_text(self,r,g,b,w,h,string):#,r,g,b,w,h
+        img = np.zeros((132,128,3),dtype=np.uint8)
+        cv2.putText(img,string, (60, 70), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255,255,255))
+        img = cv2.flip(img, 0)
+        img= cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+        glRasterPos2f(w,h)
+        glColor3f(0.0, 0.0, 0.0)
+        target_color = (0, 0, 0)
+        change_color = (r, g, b)
+        img = np.where(img == target_color, change_color, (255, 255, 255))
+        glDrawPixels(img.shape[1], img.shape[0], GL_RGB,GL_UNSIGNED_BYTE, img)
+
+
     def initializeGL(self):
         glClearColor(1.0,1.0,1.0,1.0)
+
+
+    # def drawText(self,position,string,fontsize=32):
+    #     font = ImageFont.truetype("Roboto-Regular.ttf", fontsize)
+    #     textWidth, textHeight = font.getsize(string)
+    #     image = Image.new("RGBA", (textWidth, textHeight))
+    #     draw = ImageDraw.Draw(image)
+    #     draw.text((0, 0), string, font=font, fill=(255, 255, 255, 255))
+    #     data = image.tobytes("raw", "RGBA", 0, -1)
+    #     glRasterPos2f(*position)
+    #     glDrawPixels(textWidth, textHeight, GL_RGBA, GL_UNSIGNED_BYTE, data)
+
 
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glColor3f(1.0, 0.0, 0.0)# 色を赤に設定
+
+        glRasterPos2f(0.0,0.0)
         width_square = len(self.board[0])
         height_square = len(self.board)
         sx = 1/width_square
@@ -50,6 +81,8 @@ class OpenGLWidget(QOpenGLWidget):
         glTranslate(-1, -1, 0)
         glScale(2, 2, 1)
         first = 0
+
+
         glBegin(GL_QUADS)
         for i in range(height_square):
             for j in range(width_square):
@@ -66,7 +99,23 @@ class OpenGLWidget(QOpenGLWidget):
                 glVertex2f(first+((j+1)*s),first+((i+1)*s))
                 glVertex2f(first+(j*s),first+((i+1)*s))
         glEnd()
+        for i in range(height_square):
+            for j in range(width_square):
+                if self.board[i][j] == 0:
+                    self.write_text(255,0,0,first+(j*s),first+(i*s),'0')
+                    glRasterPos2f(0.0,0.0)
+                elif self.board[i][j] == 1:
+                    self.write_text(0,0,255,first+(j*s),first+(i*s),'1')
+                    glRasterPos2f(0.0,0.0)
+                elif self.board[i][j] == 2:
+                    self.write_text(0,255,0,first+(j*s),first+(i*s),'2')
+                    glRasterPos2f(0.0,0.0)
+                elif self.board[i][j] == 3:
+                    self.write_text(255,255,0,first+(j*s),first+(i*s),'3')
+                    glRasterPos2f(0.0,0.0)
         glPopMatrix()
+        glFlush()
+        glutSwapBuffers()
 
     def resizeGL(self, width, height):
         glViewport(0, 0, width, height)
@@ -80,6 +129,7 @@ class MainWidget(QWidget):
             arg2 = self.args[2]
         except:
             print("引数が足りません")
+            exit(1)
 
         with open(self.args[1]) as f:
             self.problem = json.load(f)
