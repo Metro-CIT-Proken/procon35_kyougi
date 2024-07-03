@@ -29,7 +29,7 @@ for i in range(len(ops)):
     s = op["s"]
     p = op["p"]
 
-    assert p != 1, "1x1の抜き型のみ対応しています"
+    assert p == 0, "1x1の抜き型のみ対応しています"
 
     # print("==========")
     # print(y, x, "上下左右"[s])
