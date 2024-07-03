@@ -27,12 +27,14 @@ FIRST_POSITION = -1
 TRANSLATE_GL = WIDTH/2#qtの座標系に変換する定数
 
 class OpenGLWidget(QOpenGLWidget):
-    def __init__(self,board,parent=None):
+    def __init__(self,board,goal_board,parent=None):
         super().__init__(parent)
         self.board = board
+        self.goal_board = goal_board
         self.setMinimumSize(100, 100)
         self.setMaximumSize(400, 400)
-
+        self.zoom = 1
+        self.zoom_direction = 0
 
 
 
@@ -82,11 +84,14 @@ class OpenGLWidget(QOpenGLWidget):
         glScale(2, 2, 1)
         first = 0
 
-
+        # glOrtho(-0.25, 0.25, -0.25, 0.25, -0.25, 0.25)
         glBegin(GL_QUADS)
         for i in range(height_square):
             for j in range(width_square):
-                if self.board[i][j] == 0:
+
+                if self.board[i][j] == self.goal_board[i][j]:
+                    glColor3f(167/255,87/255,168/255)
+                elif self.board[i][j] == 0:
                     glColor3f(1.0, 0.0, 0.0)
                 elif self.board[i][j] == 1:
                     glColor3f(0.0,0.0,1.0)
@@ -101,7 +106,10 @@ class OpenGLWidget(QOpenGLWidget):
         glEnd()
         for i in range(height_square):
             for j in range(width_square):
-                if self.board[i][j] == 0:
+                if self.board[i][j] == self.goal_board[i][j]:
+                    self.write_text(167,87,168,first+(j*s),first+(i*s),str(self.board[i][j]))
+                    glRasterPos2f(0.0,0.0)
+                elif self.board[i][j] == 0:
                     self.write_text(255,0,0,first+(j*s),first+(i*s),'0')
                     glRasterPos2f(0.0,0.0)
                 elif self.board[i][j] == 1:
@@ -145,14 +153,15 @@ class MainWidget(QWidget):
         self.b_hei = self.problem['board']['height']
         self.start_board =  [[ int(self.problem['board']['start'][y][x]) for x in range(self.b_wid)]for y in range(self.b_hei)]#スタート盤面
         self.goal_board = [[ int(self.problem['board']['goal'][y][x]) for x in range(self.b_wid)]for y in range(self.b_hei)]#完成盤面
+        self.glgoal_board = self.goal_board
         layout = QVBoxLayout(self)
         self.setLayout(layout)
 
         layout_gl = QHBoxLayout()
         layout.addLayout(layout_gl)
-        self.glwidget = OpenGLWidget(self.start_board,self)
+        self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self)
         layout_gl.addWidget(self.glwidget)
-        self.glwidget_goal = OpenGLWidget(self.goal_board, self)
+        self.glwidget_goal = OpenGLWidget(self.start_board,self.goal_board, self)
         layout_gl.addWidget(self.glwidget_goal)
 
         self.dis_board = [[0 for x in range(self.b_wid)]for y in range(self.b_hei)]
@@ -223,6 +232,8 @@ class MainWidget(QWidget):
                     if self.start_board[y][x] == self.goal_board[next_h][next_w]:#ゴールした場合
                         return search_board[next_h][next_w]
 
+
+    # def keyPressZoom():
 
 
     def onSliderChange(self,value):
