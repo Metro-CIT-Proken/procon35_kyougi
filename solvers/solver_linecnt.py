@@ -1,6 +1,10 @@
 import json
 import sys
 import queue
+from threading import Timer
+
+import pdb
+
 
 class Act:
     def __init__(self, p: int, x: int, y: int, s: int):
@@ -20,7 +24,6 @@ width = board["width"]
 height = board["height"]
 start = [[int(c) for c in line] for line in board["start"]]
 goal = [[int(c) for c in line] for line in board["goal"]]
-
 
 # 行の整数値の数を保持する配列
 goal_cnt = list[dict[int, int]]()
@@ -74,37 +77,37 @@ for y in range(height):
         # 交換対象が元のセルより右側にある場合
         if x < swapx:
             for px in reversed(range(x, swapx)):
-                print("==========")
-                print(swapy, px, "左")
+                # print("==========")
+                # print(swapy, px, "左")
                 # 左づめだから2
                 answer.append(Act(0, px, swapy, 2))
-                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
-                print()
+                # print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+                # print()
                 start[swapy][px:width - 1], start[swapy][width - 1] =  start[swapy][px + 1:width], start[swapy][px]
-                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+                # print("\n".join([" ".join([str(x) for x in line]) for line in start]))
         else:
             for px in range(swapx + 1, x + 1):
-                print("==========")
-                print(swapy, px, "右")
+                # print("==========")
+                # print(swapy, px, "右")
                 # 左づめだから2
                 answer.append(Act(0, px, swapy, 3))
-                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
-                print()
+                # print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+                # print()
                 start[swapy][1:px + 1], start[swapy][0] =  start[swapy][0:px], start[swapy][px]
-                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+                # print("\n".join([" ".join([str(x) for x in line]) for line in start]))
         
         for py in reversed(range(y, swapy)):
-                print("==========")
-                print(py, x, "上")
+                # print("==========")
+                # print(py, x, "上")
                 # 上づめだから0
                 answer.append(Act(0, x, py, 0))
-                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
-                print()
+                # print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+                # print()
                 tmp = start[py][x]
                 for i in range(py, height - 1):
                     start[i][x] = start[i + 1][x]
                 start[height - 1][x] = tmp
-                print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+                # print("\n".join([" ".join([str(x) for x in line]) for line in start]))
         
         # 整数値の個数を再計算する
         start_cnt.clear()
@@ -113,27 +116,68 @@ for y in range(height):
             for sx in range(width):
                 start_cnt[sy][start[sy][sx]] += 1
 
+print("行ごとに揃えました：{}".format(len(answer)))
+
+stencils = {1: 0}
+for n in range(1, 9):
+    stencils[2 ** n] = n * 3 - 1
+
 # 行ごとに復元する
 for y in range(height):
     for x in range(width):
         if goal[y][x] == start[y][x]:
             continue
         
+        sx = x
+        # 無限大を示す定数
+        bitcnt = 10000
         # 自分より右のセルから交換対象のセルを見つける
-        for sx in range(x + 1, width):
+        for _sx in range(x + 1, width):
+            if start[y][_sx] == goal[y][_sx]:
+                dxcnt = int.bit_count(_sx - x)
+                if dxcnt < bitcnt:
+                    sx = _sx
+                    bitcnt = dxcnt
+        
             # 交換先のセルを見つけたなら
-            if start[y][sx] == goal[y][x]:
-                for px in reversed(range(x, sx)):
-                    print("==========")
-                    print(y, px, "左")
-                    print("\n".join([" ".join([str(x) for x in line]) for line in start]))
-                    print()
-                    tmp = start[y][px]
-                    start[y][px:width-1] = start[y][px+1:width]
-                    start[y][width-1] = tmp
-                    answer.append(Act(0, px, y, 2))
-                    print("\n".join([" ".join([str(x) for x in line]) for line in start]))
-                break
+        while sx - x > 0:
+            dx = -1
+            for n in reversed(range(0, 9)):
+                if 2 ** n <= sx - x:
+                    dx = 2 ** n
+                    break
+
+            for sy in range(y, min(height, y+dx)):
+                if (sy - y) % 2 == 1:
+                    continue
+                
+                # print(len(start[sy][x:x+dx]),
+                #       len(start[sy][width-dx:width]),
+                #       len(start[sy][x:width-dx]),
+                #       len(start[sy][x+dx:width]))
+                # breakpoint()
+                tmp = start[sy][x:x+dx]
+                start[sy][x:width-dx] = start[sy][x+dx:width]
+                start[sy][width-dx:width] = tmp
+                
+                
+            answer.append(Act(stencils[dx], x, sy, 2))
+            
+            sx -= dx
+        
+        # for px in reversed(range(x, sx)):
+        #     # print("==========")
+        #     # print(y, px, "左")
+        #     # print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+        #     # print()
+        #     tmp = start[y][px]
+        #     start[y][px:width-1] = start[y][px+1:width]
+        #     start[y][width-1] = tmp
+        #     answer.append(Act(0, px, y, 2))
+        #     # print("\n".join([" ".join([str(x) for x in line]) for line in start]))
+        # break
+
+print("復元しました：{}".format(len(answer)))
 
 with open("answer.json", "w") as f:
     f.write(json.dumps({
