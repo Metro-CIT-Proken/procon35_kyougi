@@ -27,14 +27,20 @@ FIRST_POSITION = -1
 TRANSLATE_GL = WIDTH/2#qtの座標系に変換する定数
 
 class OpenGLWidget(QOpenGLWidget):
-    def __init__(self,board,goal_board,parent=None):
+    def __init__(self,board,goal_board,zoom,zoom_direction,parent=None):
         super().__init__(parent)
         self.board = board
         self.goal_board = goal_board
+        self.zoom = zoom
+        self.zoom_direction = zoom_direction
         self.setMinimumSize(100, 100)
         self.setMaximumSize(400, 400)
-        self.zoom = 1
-        self.zoom_direction = 0
+        self.loc = 0
+        self.pox = 0
+        self.poy = 0
+        self.zoomx = 0
+        self.zoomy = 0
+
 
 
 
@@ -80,11 +86,33 @@ class OpenGLWidget(QOpenGLWidget):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         glPushMatrix()
-        glTranslate(-1, -1, 0)
-        glScale(2, 2, 1)
+
+        # if self.zoom_direction == 0:
+        #     self.poy = self.poy + (first+height_square*s)*self.zoom
+        #     glOrtho(self.pox, self.pox+1*self.zoom, self.poy, self.poy+(first+height_square*s)*self.zoom, -1, 1)
+
+
+        # elif self.zoom_direction == 1:
+        #     self.poy = self.poy + (first+height_square*s)*self.zoom
+        #     self.pox = self.pox + 1*self.zoom
+        #     glOrtho(self.pox, self.pox+1*self.zoom, self.poy, self.poy+(first+height_square*s)*self.zoom, -1, 1)
+
+        # elif self.zoom_direction == 2:
+        #     glOrtho(self.pox, self.pox+1*self.zoom, self.poy, self.poy+(first+height_square*s)*self.zoom, -1, 1)
+
+        # elif self.zoom_direction == 3:
+        #     self.pox = self.pox + 1*self.zoom
+        #     glOrtho(self.pox, self.pox+1*self.zoom, self.poy, self.poy+(first+height_square*s)*self.zoom, -1, 1)
+
         first = 0
 
-        # glOrtho(-0.25, 0.25, -0.25, 0.25, -0.25, 0.25)
+        glTranslate(-1, -1, 0)
+        glTranslate(self.zoomx, self.zoomy, 0)
+        glScale(2/self.zoom, 2/self.zoom, 1)
+
+
+
+
         glBegin(GL_QUADS)
         for i in range(height_square):
             for j in range(width_square):
@@ -121,6 +149,15 @@ class OpenGLWidget(QOpenGLWidget):
                 elif self.board[i][j] == 3:
                     self.write_text(255,255,0,first+(j*s),first+(i*s),'3')
                     glRasterPos2f(0.0,0.0)
+        glLineWidth(3.0)
+        glBegin(GL_LINES)
+        glVertex2f(0.5,0)
+        glVertex2f(0.5,1)
+        glEnd()
+        glBegin(GL_LINES)
+        glVertex2f(0,first+((round(height_square/2))*s))
+        glVertex2f(1,first+((round(height_square/2))*s))
+        glEnd()
         glPopMatrix()
         glFlush()
         glutSwapBuffers()
@@ -148,21 +185,22 @@ class MainWidget(QWidget):
         self.setMaximumSize(1000, 1000)
         self.resize(800, 800)
         self.grabKeyboard()
-
         self.b_wid = self.problem['board']['width']
         self.b_hei = self.problem['board']['height']
         self.start_board =  [[ int(self.problem['board']['start'][y][x]) for x in range(self.b_wid)]for y in range(self.b_hei)]#スタート盤面
         self.goal_board = [[ int(self.problem['board']['goal'][y][x]) for x in range(self.b_wid)]for y in range(self.b_hei)]#完成盤面
-        self.glgoal_board = self.goal_board
+        self.zoom = 1
+        self.zoom_direction = 0
         layout = QVBoxLayout(self)
         self.setLayout(layout)
-
         layout_gl = QHBoxLayout()
         layout.addLayout(layout_gl)
-        self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self)
-        layout_gl.addWidget(self.glwidget)
-        self.glwidget_goal = OpenGLWidget(self.start_board,self.goal_board, self)
-        layout_gl.addWidget(self.glwidget_goal)
+        # self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,self)
+
+        # layout_gl.addWidget(self.glwidget)
+        # self.glwidget_goal = OpenGLWidget(self.goal_board,[[ -1 for x in range(self.b_wid)]for y in range(self.b_hei)],self.zoom,self.zoom_direction,self)
+        # layout_gl.addWidget(self.glwidget_goal)
+
 
         self.dis_board = [[0 for x in range(self.b_wid)]for y in range(self.b_hei)]
         self.idx = 0
@@ -184,6 +222,11 @@ class MainWidget(QWidget):
         self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.slider.valueChanged.connect(self.onSliderChange)
 
+
+        self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,self)
+        layout_gl.addWidget(self.glwidget)
+        self.glwidget_goal = OpenGLWidget(self.goal_board,[[ -1 for x in range(self.b_wid)]for y in range(self.b_hei)],self.zoom,self.zoom_direction,self)
+        layout_gl.addWidget(self.glwidget_goal)
         layout.addWidget(self.slider)
 
 
@@ -194,7 +237,6 @@ class MainWidget(QWidget):
             x = self.answer["ops"][self.op_idx]["x"]
             y = self.answer["ops"][self.op_idx]["y"]
             s = self.answer["ops"][self.op_idx]["s"]
-
 
         painter = QPainter(self)
         painter.setPen(QColor("black"))
@@ -233,7 +275,7 @@ class MainWidget(QWidget):
                         return search_board[next_h][next_w]
 
 
-    # def keyPressZoom():
+
 
 
     def onSliderChange(self,value):
@@ -247,6 +289,70 @@ class MainWidget(QWidget):
         #左キーに進むと一手戻る
         elif event.key() == Qt.Key.Key_Left and not(self.op_idx == 0):
             self.right_key_check = self.applyOn(self.op_idx-1)
+
+
+        if event.key() == Qt.Key.Key_W:
+            self.ZoomController(1)
+
+        if event.key() == Qt.Key.Key_A:
+            self.ZoomController(2)
+
+        if event.key() == Qt.Key.Key_S:
+            self.ZoomController(3)
+
+        if  event.key() == Qt.Key.Key_D:
+            self.ZoomController(4)
+
+        if event.key() == Qt.Key.Key_Up:
+            self.ZoomController(5)
+
+        if event.key() == Qt.Key.Key_Down:
+            self.ZoomController(6)
+        if event.key() == Qt.Key.Key_R:
+            self.ZoomController(7)
+
+        if event.key() == Qt.Key.Key_E:
+            self.ZoomController(8)
+
+    def ZoomController(self,num):
+        if num == 1:
+            if self.glwidget.zoom_direction >= 2:
+                self.glwidget.zoom_direction -= 2
+            self.glwidget.zoomy += 0.1
+
+
+        elif num == 2:
+            if self.glwidget.zoom_direction % 2 == 1:
+                self.glwidget.zoom_direction -= 1
+            self.glwidget.zoomx -= 0.1
+
+            print("minus")
+            print(self.glwidget.zoom_direction)
+        elif num == 3:
+            if self.glwidget.zoom_direction <= 2:
+                self.glwidget.zoom_direction += 2
+            self.glwidget.zoomy -= 0.1
+        elif num == 4:
+            if self.glwidget.zoom_direction % 2 == 0:
+                self.glwidget.zoom_direction += 1
+            self.glwidget.zoomx += 0.1
+
+        elif num == 5:
+            if self.glwidget.zoom >= 0.05:
+                self.glwidget.zoom /=2
+                print("zoom")
+                print(self.glwidget.zoom)
+        elif num == 6:
+            if self.glwidget.zoom*2 <= 1:
+                self.glwidget.zoom*=2
+                print("zoomout")
+                print(self.glwidget.zoom)
+
+        elif num == 7:
+            self.glwidget.zoom = 1
+            self.glwidget.zoomx = 0
+            self.glwidget.zoomy = 0
+        self.glwidget.update()
 
     #0.5秒ごとに進む・戻る
     def opTimerCallback(self):
