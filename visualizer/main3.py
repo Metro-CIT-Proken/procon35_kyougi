@@ -107,7 +107,7 @@ class OpenGLWidget(QOpenGLWidget):
         first = 0
 
         glTranslate(-1, -1, 0)
-        glTranslate(self.zoomx, self.zoomy, 0)
+        glTranslate(-self.zoomx, -self.zoomy, 0)
         glScale(2/self.zoom, 2/self.zoom, 1)
 
 
@@ -316,26 +316,34 @@ class MainWidget(QWidget):
 
     def ZoomController(self,num):
         if num == 1:
-            if self.glwidget.zoom_direction >= 2:
-                self.glwidget.zoom_direction -= 2
-            self.glwidget.zoomy += 0.1
+            if self.glwidget.zoomy+self.glwidget.zoom+0.1  <=  1:
+                self.glwidget.zoomy += 0.1
+                if self.glwidget.zoom_direction >= 2:
+                    self.glwidget.zoom_direction -= 2
+
 
 
         elif num == 2:
-            if self.glwidget.zoom_direction % 2 == 1:
-                self.glwidget.zoom_direction -= 1
-            self.glwidget.zoomx -= 0.1
+            if self.glwidget.zoomx-0.1  >=  0:
+                self.glwidget.zoomx -= 0.1
+                if self.glwidget.zoom_direction % 2 == 1:
+                    self.glwidget.zoom_direction -= 1
+
 
             print("minus")
             print(self.glwidget.zoom_direction)
         elif num == 3:
-            if self.glwidget.zoom_direction <= 2:
-                self.glwidget.zoom_direction += 2
-            self.glwidget.zoomy -= 0.1
+            if self.glwidget.zoomy-0.1  >=  0:
+                self.glwidget.zoomy -= 0.1
+                if self.glwidget.zoom_direction <= 2:
+                    self.glwidget.zoom_direction += 2
+
         elif num == 4:
-            if self.glwidget.zoom_direction % 2 == 0:
-                self.glwidget.zoom_direction += 1
-            self.glwidget.zoomx += 0.1
+            if self.glwidget.zoomx+self.glwidget.zoom+0.1  <=  1:
+                self.glwidget.zoomx += 0.1
+                if self.glwidget.zoom_direction % 2 == 0:
+                    self.glwidget.zoom_direction += 1
+
 
         elif num == 5:
             if self.glwidget.zoom >= 0.05:
