@@ -107,7 +107,7 @@ class OpenGLWidget(QOpenGLWidget):
         first = 0
 
         glTranslate(-1, -1, 0)
-        glTranslate(-self.zoomx, -self.zoomy, 0)
+        glTranslate(-self.zoomx, -self.zoomy, 1)
         glScale(2/self.zoom, 2/self.zoom, 1)
 
 
@@ -116,7 +116,6 @@ class OpenGLWidget(QOpenGLWidget):
         glBegin(GL_QUADS)
         for i in range(height_square):
             for j in range(width_square):
-
                 if self.board[i][j] == self.goal_board[i][j]:
                     glColor3f(167/255,87/255,168/255)
                 elif self.board[i][j] == 0:
@@ -315,11 +314,16 @@ class MainWidget(QWidget):
             self.ZoomController(8)
 
     def ZoomController(self,num):
+        print(f'ZOOM:{self.glwidget.zoom}')
+        print(f'ZOOMX:{self.glwidget.zoomx}')
+        print(f'ZOOMY:{self.glwidget.zoomy}')
         if num == 1:
-            if self.glwidget.zoomy+self.glwidget.zoom+0.1  <=  1:
+            if self.glwidget.zoomy*self.glwidget.zoom+(self.glwidget.zoom*2)+0.1  <=  2.0:
                 self.glwidget.zoomy += 0.1
                 if self.glwidget.zoom_direction >= 2:
                     self.glwidget.zoom_direction -= 2
+            else:
+                self.glwidget.zoomy = 2/self.glwidget.zoom-2
 
 
 
@@ -328,6 +332,8 @@ class MainWidget(QWidget):
                 self.glwidget.zoomx -= 0.1
                 if self.glwidget.zoom_direction % 2 == 1:
                     self.glwidget.zoom_direction -= 1
+            else:
+                self.glwidget.zoomx = 0
 
 
             print("minus")
@@ -337,12 +343,17 @@ class MainWidget(QWidget):
                 self.glwidget.zoomy -= 0.1
                 if self.glwidget.zoom_direction <= 2:
                     self.glwidget.zoom_direction += 2
+            else:
+                self.glwidget.zoomy = 0
 
         elif num == 4:
-            if self.glwidget.zoomx+self.glwidget.zoom+0.1  <=  1:
+            if self.glwidget.zoomx*self.glwidget.zoom+(self.glwidget.zoom*2)+0.1  <=  2.0:
                 self.glwidget.zoomx += 0.1
                 if self.glwidget.zoom_direction % 2 == 0:
                     self.glwidget.zoom_direction += 1
+            else:
+                self.glwidget.zoomx = 2/self.glwidget.zoom-2
+
 
 
         elif num == 5:
