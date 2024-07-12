@@ -61,15 +61,7 @@ class OpenGLWidget(QOpenGLWidget):
         glClearColor(1.0,1.0,1.0,1.0)
 
 
-    # def drawText(self,position,string,fontsize=32):
-    #     font = ImageFont.truetype("Roboto-Regular.ttf", fontsize)
-    #     textWidth, textHeight = font.getsize(string)
-    #     image = Image.new("RGBA", (textWidth, textHeight))
-    #     draw = ImageDraw.Draw(image)
-    #     draw.text((0, 0), string, font=font, fill=(255, 255, 255, 255))
-    #     data = image.tobytes("raw", "RGBA", 0, -1)
-    #     glRasterPos2f(*position)
-    #     glDrawPixels(textWidth, textHeight, GL_RGBA, GL_UNSIGNED_BYTE, data)
+
 
 
     def paintGL(self):
@@ -86,23 +78,6 @@ class OpenGLWidget(QOpenGLWidget):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         glPushMatrix()
-
-        # if self.zoom_direction == 0:
-        #     self.poy = self.poy + (first+height_square*s)*self.zoom
-        #     glOrtho(self.pox, self.pox+1*self.zoom, self.poy, self.poy+(first+height_square*s)*self.zoom, -1, 1)
-
-
-        # elif self.zoom_direction == 1:
-        #     self.poy = self.poy + (first+height_square*s)*self.zoom
-        #     self.pox = self.pox + 1*self.zoom
-        #     glOrtho(self.pox, self.pox+1*self.zoom, self.poy, self.poy+(first+height_square*s)*self.zoom, -1, 1)
-
-        # elif self.zoom_direction == 2:
-        #     glOrtho(self.pox, self.pox+1*self.zoom, self.poy, self.poy+(first+height_square*s)*self.zoom, -1, 1)
-
-        # elif self.zoom_direction == 3:
-        #     self.pox = self.pox + 1*self.zoom
-        #     glOrtho(self.pox, self.pox+1*self.zoom, self.poy, self.poy+(first+height_square*s)*self.zoom, -1, 1)
 
         first = 0
 
@@ -214,21 +189,52 @@ class MainWidget(QWidget):
         self.right_key_check = False
         # self.color = {0:0,1:0,2:0,3:0}
         self.dict_action = {0:"上",1:"下",2:"左",3:"右"}
-        self.slider = QSlider(Qt.Orientation.Horizontal)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(self.answer["n"])
-        self.slider.setTickInterval(1)
-        self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
-        self.slider.valueChanged.connect(self.onSliderChange)
-
-
+        self.dic_dir = ["上","下","左","右"]
         self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,self)
         layout_gl.addWidget(self.glwidget)
         self.glwidget_goal = OpenGLWidget(self.goal_board,[[ -1 for x in range(self.b_wid)]for y in range(self.b_hei)],self.zoom,self.zoom_direction,self)
         layout_gl.addWidget(self.glwidget_goal)
-        layout.addWidget(self.slider)
+        self.error = 0
+        if self.args[3] == "a":
+            self.slider = QSlider(Qt.Orientation.Horizontal)
+            self.slider.setMinimum(0)
+            self.slider.setMaximum(self.answer["n"])
+            self.slider.setTickInterval(1)
+            self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+            self.slider.valueChanged.connect(self.onSliderChange)
+            layout.addWidget(self.slider)
+        if self.args[3] == "m":
+            self.xtext  = QLineEdit(self)
+            layout.addWidget(self.xtext)
+            self.ytext = QLineEdit()
+            layout.addWidget(self.ytext)
+            self.stext = QLineEdit()
+            layout.addWidget(self.stext)
+            self.button = QPushButton('Move')
+            layout.addWidget(self.button)
+            self.button.clicked.connect(self.on_button_click)
 
 
+
+    def on_button_click(self):
+        try:
+            int(self.xtext.text())
+            int(self.ytext.text())
+        except ValueError:
+            print('座標の値が有効ではありません')
+            return
+
+
+        if (0 <= int(self.xtext.text()) and int(self.xtext.text()) < self.b_wid):
+                self.error = 1
+                if (0 <= int(self.ytext.text()) and int(self.ytext.text()) < self.b_hei ):
+                    self.error = 2
+                    if self.stext.text() in self.dic_dir:
+                        self.move(int(self.xtext.text()),int(self.ytext.text()),self.stext())
+                    else:
+                        self.error = 3
+        self.update()
+        self.glwidget.update()
 
 
     def paintEvent(self, event):
@@ -241,11 +247,20 @@ class MainWidget(QWidget):
         painter.setPen(QColor("black"))
         count_point = QPoint(30,20)
         action_text_point = QPoint(30,40)
+        error_messsage_point = QPoint(30,70)
         painter.drawText(count_point,f'{self.op_idx}手目 あと {self.answer["n"]-self.op_idx}手')
         print(f'{self.op_idx}手目 あと {self.answer["n"]-self.op_idx}手')
         if not(self.op_idx >= self.answer["n"]):
             painter.drawText(action_text_point,f'座標: x:{x}y:{y} 次の行動: {self.dict_action[s]} にずらす' )
             print(f'座標: x:{x}y:{y} 次の行動: {self.dict_action[s]} にずらす' )
+        painter.setPen(QColor("red"))
+        if self.error == 1:
+            painter.drawText(error_messsage_point,f'指定したx座標が範囲外です')
+        elif self.error == 2:
+            painter.drawText(error_messsage_point,f'指定したy座標が範囲外です')
+        elif self.error == 3:
+            painter.drawText(error_messsage_point,f'方向が指定できていません 上、下、左、右のどちらかを指定してください。')
+
         painter.setBrush(QColor("white"))
 
         font = painter.font()
@@ -282,12 +297,15 @@ class MainWidget(QWidget):
 
 
     def keyPressEvent(self, event: QKeyEvent):
-        #右キーを押すと一手進む
-        if event.key() == Qt.Key.Key_Right and not(self.op_idx == self.answer["n"]):
-            self.right_key_check = self.applyOn(self.op_idx+1)
-        #左キーに進むと一手戻る
-        elif event.key() == Qt.Key.Key_Left and not(self.op_idx == 0):
-            self.right_key_check = self.applyOn(self.op_idx-1)
+        if self.args[3] == "a":
+            #右キーを押すと一手進む
+            if event.key() == Qt.Key.Key_Right and not(self.op_idx == self.answer["n"]):
+                self.right_key_check = self.applyOn(self.op_idx+1)
+            #左キーに進むと一手戻る
+            elif event.key() == Qt.Key.Key_Left and not(self.op_idx == 0):
+                self.right_key_check = self.applyOn(self.op_idx-1)
+
+
 
 
         if event.key() == Qt.Key.Key_W:
@@ -403,7 +421,10 @@ class MainWidget(QWidget):
         x = self.answer["ops"][self.op_idx]["x"]
         y = self.answer["ops"][self.op_idx]["y"]
         s = self.answer["ops"][self.op_idx]["s"]
+        self.move(x,y,s)
 
+
+    def move(self,x,y,s):
         if s == 0:
             for i in range(y,len(self.start_board)-1):
                 self.start_board[i][x],self.start_board[i+1][x] = self.start_board[i+1][x],self.start_board[i][x]#上方向にずらす
