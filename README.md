@@ -1,7 +1,10 @@
 # 操作方法
 
+
+##自動操作の場合
+
 ```
-python3 main3.py 問題json 回答json "a" or "m"
+python3 main3.py 問題json 回答json "a" 
 ```
 
 * UP　キー 左下にズームイン
@@ -17,4 +20,12 @@ python3 main3.py 問題json 回答json "a" or "m"
 
 * aオプション 自動で盤面を操作する
 * mオプション 手動で盤面を操作する
+
+##手動操作の場合
+
+```
+python3 main3.py 問題json 回答json  "m"
+```
+
+*ズームとカメラの操作は手動と変わらない
 
