@@ -12,6 +12,7 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 import cv2
 import numpy as np
+from collections import deque
 
 
 
@@ -29,7 +30,7 @@ FIRST_POSITION = -1
 TRANSLATE_GL = WIDTH/2#qtの座標系に変換する定数
 
 class OpenGLWidget(QOpenGLWidget):
-    def __init__(self,board,goal_board,zoom,zoom_direction,parent=None):
+    def __init__(self,board,goal_board,zoom,zoom_direction,xtext=None,ytext=None,parent=None):
         super().__init__(parent)
         self.board = board
         self.goal_board = goal_board
@@ -39,6 +40,8 @@ class OpenGLWidget(QOpenGLWidget):
         self.setMaximumSize(400, 400)
         self.zoomx = 0
         self.zoomy = 0
+        self.xtext = xtext
+        self.ytext = ytext
 
 
 
@@ -90,6 +93,11 @@ class OpenGLWidget(QOpenGLWidget):
         glBegin(GL_QUADS)
         for i in range(height_square):
             for j in range(width_square):
+
+                if not(self.xtext == None or self.ytext == None):
+                    if self.ytext == i and self.xtext == j:
+                        glColor3f(0.0,0.0,0.0)
+                        continue
                 if self.board[i][j] == self.goal_board[i][j]:
                     glColor3f(167/255,87/255,168/255)
                 elif self.board[i][j] == 0:
@@ -189,7 +197,33 @@ class MainWidget(QWidget):
         # self.color = {0:0,1:0,2:0,3:0}
         self.dict_action = {0:"上",1:"下",2:"左",3:"右"}
         self.dic_dir = ["上","下","左","右"]
-        self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,self)#操作盤面
+        check_int = True
+        self.painter_text = QLabel("")
+        self.painter_text.setFixedSize(200,50)
+        self.stack_move = [[]]
+        layout.addWidget(self.painter_text)
+        self.error_label = QLabel("")
+        if(self.args[3] == "m"):
+            self.ytext = QLineEdit(self)#入力フォームを追加(y座標)
+            self.xtext  = QLineEdit(self)#入力フォームを追加(x座標)
+            try:#x座標,y座標は数字になっているか
+                int(self.xtext.text())
+                int(self.ytext.text())
+            except ValueError:
+                self.error = 5
+                check_int = False
+                self.Error()
+                print('座標の値が有効ではありません')
+            if check_int:
+                self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,int(self.xtext.text),int(self.ytext.text),self)#操作盤面
+            else:
+                self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,self)#操作盤面
+
+
+        elif(self.args[3] == "a"):
+            self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,self)#操作盤面
+
+
         layout_gl.addWidget(self.glwidget)
         self.glwidget_goal = OpenGLWidget(self.goal_board,[[ -1 for x in range(self.b_wid)]for y in range(self.b_hei)],self.zoom,self.zoom_direction,self)#目的の盤面
         self.painter_layout = QVBoxLayout()
@@ -204,7 +238,6 @@ class MainWidget(QWidget):
             self.slider.valueChanged.connect(self.onSliderChange)
             layout.addWidget(self.slider)
         elif self.args[3] == "m":#手動モードの場合
-
             direction_button_layout = QHBoxLayout(self)
             text_layout = QVBoxLayout(self)
             layout.addLayout(direction_button_layout)
@@ -228,19 +261,19 @@ class MainWidget(QWidget):
             self.direction_button_right.clicked.connect(self.right_move)
 
 
-            self.error_label = QLabel("")
+
             self.error_label.setFixedSize(200,50)
             text_layout.addWidget(self.error_label)
 
             self.xlabel = QLabel("x座標")
             text_layout.addWidget(self.xlabel)
             self.xlabel.setFixedSize(50,20)
-            self.xtext  = QLineEdit(self)#入力フォームを追加(x座標)
+
             text_layout.addWidget(self.xtext)
             self.ylabel = QLabel("y座標")
             self.ylabel.setFixedSize(50,20)
             text_layout.addWidget(self.ylabel)
-            self.ytext = QLineEdit(self)#入力フォームを追加(y座標)
+
             text_layout.addWidget(self.ytext)
 
 
@@ -270,22 +303,16 @@ class MainWidget(QWidget):
 
 
     def on_back_button_click(self):#「Back」のボタンを押した場合
-        if  (self.xtext.text() is None) or (self.ytext.text() is None) or (self.direction_mannual_move == 0):
-            self.error = 4
-            return
-        try:#x座標,y座標は数字になっているか
-            int(self.xtext.text())
-            int(self.ytext.text())
-        except ValueError:
-            print('座標の値が有効ではありません')
-            return
 
         if  self.op_idx >= 1:
-            self.back(int(self.xtext.text()),int(self.ytext.text()),self.direction_mannual_move-1)
+            prev_list = self.stack_move.pop()
+            self.back(prev_list[0],prev_list[1],self.direction_mannual_move-1)
         else:
             self.error = 6
             self.Error()
             return
+        self.error = 0
+        self.Error()
 
         self.update()
         self.glwidget.update()
@@ -293,7 +320,7 @@ class MainWidget(QWidget):
 
 
     def on_button_click(self):#Moveボタンが押されたときの処理
-        if  (self.xtext.text() is None) or (self.ytext.text() is None) or (self.direction_mannual_move == 0):
+        if  (self.xtext.text() is None) or (self.ytext.text() is None) or (self.direction_mannual_move == 0) or (self.xtext.text() == "") or (self.ytext.text()==""):
             self.error = 4
             self.Error()
             print("入力してください")
@@ -314,6 +341,7 @@ class MainWidget(QWidget):
 
                 if (0 <= int(self.ytext.text()) and int(self.ytext.text()) < self.b_hei ):#y座標が範囲外の場合
                     self.move(int(self.xtext.text()),int(self.ytext.text()),self.direction_mannual_move-1)#入力したx座標,y座標,方向を盤面を動かす関数に送る
+                    self.stack_move.append([int(self.xtext.text()),int(self.ytext.text())])
                 else:
                     self.error = 2
                     self.Error()
@@ -323,6 +351,8 @@ class MainWidget(QWidget):
             self.error = 1
             self.Error()
             return
+        self.error = 0
+        self.Error()
 
         self.update()
         self.glwidget.update()
@@ -358,13 +388,17 @@ class MainWidget(QWidget):
             s = self.answer["ops"][self.op_idx]["s"]
 
         painter = QPainter(self)
-        # self.painter_layout.addWidget(painter)
+
         painter.setPen(QColor("black"))
-        count_point = QPoint(30,20)
+
         action_text_point = QPoint(30,40)
-        error_messsage_point = QPoint(30,70)
-        painter.drawText(count_point,f'{self.op_idx}手目 あと {self.answer["n"]-self.op_idx}手')
-        print(f'{self.op_idx}手目 あと {self.answer["n"]-self.op_idx}手')
+
+        if(self.args[3] == "a"):
+            self.painter_text.setText(f'{self.op_idx}手目 あと {self.answer["n"]-self.op_idx}手')
+            print(f'{self.op_idx}手目 あと {self.answer["n"]-self.op_idx}手')
+        elif(self.args[3] == "m"):
+            self.painter_text.setText(f'{self.op_idx}手目 ')
+            print(f'{self.op_idx}手目')
         if not(self.op_idx >= self.answer["n"]):
             painter.drawText(action_text_point,f'座標: x:{x}y:{y} 次の行動: {self.dict_action[s]} にずらす')
             print(f'座標: x:{x}y:{y} 次の行動: {self.dict_action[s]} にずらす' )
