@@ -41,20 +41,60 @@ class Stencil:
         if s == Stencil.StencilDirection.UP:
             x_start = max(0, x)
             x_end = min(board.width, x + self.width)
-            for px in range(max(x_start, x_end)):
-                push_idx = 0
-                line_idx = board.height - 1
+            for px in range(x_start, x_end):
+                pushed_cells = []
+                float_cells = []
                 for py in range(board.height):
-                    if py >= y and py < y + self.height and self.cells[py - y][px - x] == 1:
-                        new_board.board[line_idx][px] = board.board[py][px]
-                        line_idx -= 1
+                    try:
+                        if py >= y and py < y + self.height and self.cells[py - y, px - x] == 1:
+                            float_cells.append(board.board[py][px])
+                        else:
+                            pushed_cells.append(board.board[py][px])
+                    except:
+                        breakpoint()
+                new_board.board[:len(pushed_cells), px] = pushed_cells
+                new_board.board[len(pushed_cells):, px] = float_cells
+        elif s == Stencil.StencilDirection.DOWN:
+            x_start = max(0, x)
+            x_end = min(board.width, x + self.width)
+            for px in range(x_start, x_end):
+                pushed_cells = []
+                float_cells = []
+                for py in range(board.height):
+                    if py >= y and py < y + self.height and self.cells[py - y, px - x] == 1:
+                        float_cells.append(board.board[py][px])
                     else:
-                        new_board.board[push_idx][px] = board.board[py][px]
-                        push_idx += 1
-                    np.flip(new_board.board[push_idx:, :])
-                
+                        pushed_cells.append(board.board[py][px])
+                new_board.board[:len(float_cells), px] = float_cells
+                new_board.board[len(float_cells):, px] = pushed_cells
+        elif s == Stencil.StencilDirection.LEFT:
+            y_start = max(0, y)
+            y_end = min(board.height, y + self.height)
+            for py in range(y_start, y_end):
+                pushed_cells = []
+                float_cells = []
+                for px in range(board.width):
+                    if px >= x and px < x + self.width and self.cells[py - y, px - x] == 1:
+                        float_cells.append(board.board[py][px])
+                    else:
+                        pushed_cells.append(board.board[py][px])
+                new_board.board[py, :len(pushed_cells)] = pushed_cells
+                new_board.board[py, len(pushed_cells):] = float_cells
+        elif s == Stencil.StencilDirection.RIGHT:
+            y_start = max(0, y)
+            y_end = min(board.height, y + self.height)
+            for py in range(y_start, y_end):
+                pushed_cells = []
+                float_cells = []
+                for px in range(board.width):
+                    if px >= x and px < x + self.width and self.cells[py - y, px - x] == 1:
+                        float_cells.append(board.board[py][px])
+                    else:
+                        pushed_cells.append(board.board[py][px])
+                new_board.board[py, :len(float_cells)] = float_cells
+                new_board.board[py, len(float_cells):] = pushed_cells
 
-        # TODO: DOWN, LEFT, RIGHTを実装する
+        return new_board
 
 
     def placeables(self, board: Board):
