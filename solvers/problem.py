@@ -6,6 +6,8 @@ import numpy as np
 from enum import IntEnum
 
 class Board:
+    CELL_SIZE = 2 * 256 * 256 // 256
+
     def __init__(self, prob: "Problem", json):
         self.board = np.array([[int(x) for x in line] for line in json], dtype=np.int8)
         self.height = self.board.shape[0]
@@ -38,61 +40,42 @@ class Stencil:
     
     def apply(self, board: Board, x, y, s: StencilDirection):
         new_board = copy.copy(board)
+        x_start = max(0, x)
+        x_end = min(board.width, x + self.width)
+        y_start = max(0, y)
+        y_end = min(board.height, y + self.height)
+        px_start = max(0, -x)
+        px_end = min(self.width, board.width - x)
+        py_start = max(0, -y)
+        py_end = min(self.height, board.height - y)
         if s == Stencil.StencilDirection.UP:
-            x_start = max(0, x)
-            x_end = min(board.width, x + self.width)
-            for px in range(x_start, x_end):
-                pushed_cells = []
-                float_cells = []
-                for py in range(board.height):
-                    try:
-                        if py >= y and py < y + self.height and self.cells[py - y, px - x] == 1:
-                            float_cells.append(board.board[py][px])
-                        else:
-                            pushed_cells.append(board.board[py][px])
-                    except:
-                        breakpoint()
-                new_board.board[:len(pushed_cells), px] = pushed_cells
-                new_board.board[len(pushed_cells):, px] = float_cells
+            for tx in range(x_start, x_end):
+                cond = np.zeros((board.height), dtype=np.bool)
+                cond[y_start:y_end] = self.cells[py_start:py_end, tx - x]
+                pushed_cells = np.extract(~cond, board.board[:, tx])
+                float_cells = np.extract(cond, board.board[:, tx])
+                new_board.board[:, tx] = np.concatenate((pushed_cells, float_cells))
         elif s == Stencil.StencilDirection.DOWN:
-            x_start = max(0, x)
-            x_end = min(board.width, x + self.width)
-            for px in range(x_start, x_end):
-                pushed_cells = []
-                float_cells = []
-                for py in range(board.height):
-                    if py >= y and py < y + self.height and self.cells[py - y, px - x] == 1:
-                        float_cells.append(board.board[py][px])
-                    else:
-                        pushed_cells.append(board.board[py][px])
-                new_board.board[:len(float_cells), px] = float_cells
-                new_board.board[len(float_cells):, px] = pushed_cells
+            for tx in range(x_start, x_end):
+                cond = np.zeros((board.height), dtype=np.bool)
+                cond[y_start:y_end] = self.cells[py_start:py_end, tx - x]
+                pushed_cells = np.extract(~cond, board.board[:, tx])
+                float_cells = np.extract(cond, board.board[:, tx])
+                new_board.board[:, tx] = np.concatenate((float_cells, pushed_cells))
         elif s == Stencil.StencilDirection.LEFT:
-            y_start = max(0, y)
-            y_end = min(board.height, y + self.height)
-            for py in range(y_start, y_end):
-                pushed_cells = []
-                float_cells = []
-                for px in range(board.width):
-                    if px >= x and px < x + self.width and self.cells[py - y, px - x] == 1:
-                        float_cells.append(board.board[py][px])
-                    else:
-                        pushed_cells.append(board.board[py][px])
-                new_board.board[py, :len(pushed_cells)] = pushed_cells
-                new_board.board[py, len(pushed_cells):] = float_cells
+            for ty in range(y_start, y_end):
+                cond = np.zeros((board.width), dtype=np.bool)
+                cond[x_start:x_end] = self.cells[ty - y, px_start:px_end]
+                pushed_cells = np.extract(~cond, board.board[ty, :])
+                float_cells = np.extract(cond, board.board[ty, :])
+                new_board.board[ty, :] = np.concatenate((pushed_cells, float_cells))
         elif s == Stencil.StencilDirection.RIGHT:
-            y_start = max(0, y)
-            y_end = min(board.height, y + self.height)
-            for py in range(y_start, y_end):
-                pushed_cells = []
-                float_cells = []
-                for px in range(board.width):
-                    if px >= x and px < x + self.width and self.cells[py - y, px - x] == 1:
-                        float_cells.append(board.board[py][px])
-                    else:
-                        pushed_cells.append(board.board[py][px])
-                new_board.board[py, :len(float_cells)] = float_cells
-                new_board.board[py, len(float_cells):] = pushed_cells
+            for ty in range(y_start, y_end):
+                cond = np.zeros((board.width), dtype=np.bool)
+                cond[x_start:x_end] = self.cells[ty - y, px_start:px_end]
+                pushed_cells = np.extract(~cond, board.board[ty, :])
+                float_cells = np.extract(cond, board.board[ty, :])
+                new_board.board[ty, :] = np.concatenate((float_cells, pushed_cells))
 
         return new_board
 
