@@ -30,7 +30,7 @@ FIRST_POSITION = -1
 TRANSLATE_GL = WIDTH/2#qtの座標系に変換する定数
 
 class OpenGLWidget(QOpenGLWidget):
-    def __init__(self,board,goal_board,zoom,zoom_direction,xtext=None,ytext=None,parent=None):
+    def __init__(self,board,goal_board,zoom,zoom_direction,xtext_int=None,ytext_int=None,answer=None,op_idx=None,parent=None):
         super().__init__(parent)
         self.board = board
         self.goal_board = goal_board
@@ -40,8 +40,11 @@ class OpenGLWidget(QOpenGLWidget):
         self.setMaximumSize(400, 400)
         self.zoomx = 0
         self.zoomy = 0
-        self.xtext = xtext
-        self.ytext = ytext
+        self.xtext_int = xtext_int
+        self.ytext_int = ytext_int
+        self.answer = answer
+        self.op_idx = op_idx
+        self.yazirusi = ""
 
 
 
@@ -87,18 +90,31 @@ class OpenGLWidget(QOpenGLWidget):
         glTranslate(-self.zoomx, -self.zoomy, 1)
         glScale(2/self.zoom, 2/self.zoom, 1)
 
-
-
+        x = None
+        y = None
+        if not(self.answer == None or self.op_idx == None):
+            x = self.answer["ops"][self.op_idx]["x"]
+            y = self.answer["ops"][self.op_idx]["y"]
 
         glBegin(GL_QUADS)
+        print(f'gl x座標{x} : y座標:{y}')
+        print(f'xtext {self.xtext_int}')
+        print(f'ytext {self.ytext_int}')
+
         for i in range(height_square):
             for j in range(width_square):
 
-                if not(self.xtext == None or self.ytext == None):
-                    if self.ytext == i and self.xtext == j:
+                if not(self.xtext_int == None or self.ytext_int == None):
+                    print("TRUE")
+                    if self.ytext_int == i and self.xtext_int == j:
+                        print("TRUE2")
                         glColor3f(0.0,0.0,0.0)
-                        continue
-                if self.board[i][j] == self.goal_board[i][j]:
+
+                elif not(x == None or y==None):
+                    if x == j and y == i:
+                        glColor3f(0.0,0.0,0.0)
+
+                elif self.board[i][j] == self.goal_board[i][j]:
                     glColor3f(167/255,87/255,168/255)
                 elif self.board[i][j] == 0:
                     glColor3f(1.0, 0.0, 0.0)
@@ -115,21 +131,94 @@ class OpenGLWidget(QOpenGLWidget):
         glEnd()
         for i in range(height_square):
             for j in range(width_square):
-                if self.board[i][j] == self.goal_board[i][j]:
-                    self.write_text(167,87,168,first+(j*s),first+(i*s),str(self.board[i][j]))
-                    glRasterPos2f(0.0,0.0)
+
+                if self.ytext_int == i and self.xtext_int == j:
+                    if not(self.xtext_int == None or self.ytext_int == None):
+                        self.write_text(0,0,0,first+(j*s),first+(i*s),str(self.board[i][j]))
+                        glRasterPos2f(0.0,0.0)
+
+                elif self.board[i][j] == self.goal_board[i][j]:
+                    if self.yazirusi == "v" and i > self.ytext_int and j == self.xtext_int:
+                        self.write_text(167,87,168,first+(j*s),first+(i*s),self.yazirusi+str(self.board[i][j]))
+                        glRasterPos2f(0.0,0.0)
+                    elif self.yazirusi == "^" and i < self.ytext_int and j == self.xtext_int:
+                        self.write_text(167,87,168,first+(j*s),first+(i*s),self.yazirusi+str(self.board[i][j]))
+                        glRasterPos2f(0.0,0.0)
+                    elif self.yazirusi == "->" and i == self.ytext_int and j < self.xtext_int:
+                        self.write_text(167,87,168,first+(j*s),first+(i*s),self.yazirusi+str(self.board[i][j]))
+                        glRasterPos2f(0.0,0.0)
+                    elif self.yazirusi == "<-" and i == self.ytext_int and j > self.xtext_int:
+                        self.write_text(167,87,168,first+(j*s),first+(i*s),self.yazirusi+str(self.board[i][j]))
+                        glRasterPos2f(0.0,0.0)
+                    else:
+                        self.write_text(167,87,168,first+(j*s),first+(i*s),str(self.board[i][j]))
+                        glRasterPos2f(0.0,0.0)
                 elif self.board[i][j] == 0:
-                    self.write_text(255,0,0,first+(j*s),first+(i*s),'0')
-                    glRasterPos2f(0.0,0.0)
+                    if self.yazirusi == "v" and i > self.ytext_int and j == self.xtext_int:
+                        self.write_text(255,0,0,first+(j*s),first+(i*s),self.yazirusi+'0')
+                        glRasterPos2f(0.0,0.0)
+                    elif self.yazirusi == "^" and i < self.ytext_int and j == self.xtext_int:
+                        self.write_text(255,0,0,first+(j*s),first+(i*s),self.yazirusi+'0')
+                        glRasterPos2f(0.0,0.0)
+                    elif self.yazirusi == "->" and i == self.ytext_int and j < self.xtext_int:
+                        self.write_text(255,0,0,first+(j*s),first+(i*s),self.yazirusi+'0')
+                        glRasterPos2f(0.0,0.0)
+                    elif self.yazirusi == "<-" and i == self.ytext_int and j > self.xtext_int:
+                        self.write_text(255,0,0,first+(j*s),first+(i*s),self.yazirusi+'0')
+                        glRasterPos2f(0.0,0.0)
+                    else:
+                        self.write_text(255,0,0,first+(j*s),first+(i*s),'0')
+                        glRasterPos2f(0.0,0.0)
                 elif self.board[i][j] == 1:
-                    self.write_text(0,0,255,first+(j*s),first+(i*s),'1')
-                    glRasterPos2f(0.0,0.0)
+                    if self.yazirusi == "v" and i > self.ytext_int and j == self.xtext_int:
+                        self.write_text(0,0,255,first+(j*s),first+(i*s),self.yazirusi+'1')
+                        glRasterPos2f(0.0,0.0)
+                    elif  self.yazirusi == "^" and i < self.ytext_int and j == self.xtext_int:
+                        self.write_text(0,0,255,first+(j*s),first+(i*s),self.yazirusi+'1')
+                        glRasterPos2f(0.0,0.0)
+                    elif  self.yazirusi == "->" and i == self.ytext_int and j < self.xtext_int:
+                        self.write_text(0,0,255,first+(j*s),first+(i*s),self.yazirusi+'1')
+                        glRasterPos2f(0.0,0.0)
+                    elif  self.yazirusi == "<-" and i == self.ytext_int and j > self.xtext_int:
+                        self.write_text(0,0,255,first+(j*s),first+(i*s),self.yazirusi+'1')
+                        glRasterPos2f(0.0,0.0)
+                    else:
+                        self.write_text(0,0,255,first+(j*s),first+(i*s),'1')
+                        glRasterPos2f(0.0,0.0)
                 elif self.board[i][j] == 2:
-                    self.write_text(0,255,0,first+(j*s),first+(i*s),'2')
-                    glRasterPos2f(0.0,0.0)
+                    if self.yazirusi == "v" and i > self.ytext_int and j == self.xtext_int:
+                        self.write_text(0,255,0,first+(j*s),first+(i*s),self.yazirusi+'2')
+                        glRasterPos2f(0.0,0.0)
+                    elif self.yazirusi == "^" and i < self.ytext_int and j == self.xtext_int:
+                        self.write_text(0,255,0,first+(j*s),first+(i*s),self.yazirusi+'2')
+                        glRasterPos2f(0.0,0.0)
+                    elif self.yazirusi == "->" and i == self.ytext_int and j < self.xtext_int:
+                        self.write_text(0,255,0,first+(j*s),first+(i*s),self.yazirusi+'2')
+                        glRasterPos2f(0.0,0.0)
+                    elif self.yazirusi == "<-" and i == self.ytext_int and j > self.xtext_int:
+                        self.write_text(0,255,0,first+(j*s),first+(i*s),self.yazirusi+'2')
+                        glRasterPos2f(0.0,0.0)
+                    else:
+                        self.write_text(0,255,0,first+(j*s),first+(i*s),'2')
+                        glRasterPos2f(0.0,0.0)
                 elif self.board[i][j] == 3:
-                    self.write_text(255,255,0,first+(j*s),first+(i*s),'3')
-                    glRasterPos2f(0.0,0.0)
+                    if self.yazirusi == "v" and i > self.ytext_int and j == self.xtext_int:
+                        self.write_text(255,255,0,first+(j*s),first+(i*s),self.yazirusi+'3')
+                        glRasterPos2f(0.0,0.0)
+
+                    elif self.yazirusi == "^" and i < self.ytext_int and j == self.xtext_int:
+                        self.write_text(255,255,0,first+(j*s),first+(i*s),self.yazirusi+'3')
+                        glRasterPos2f(0.0,0.0)
+                    elif self.yazirusi == "->" and i == self.ytext_int and j < self.xtext_int:
+                        self.write_text(255,255,0,first+(j*s),first+(i*s),self.yazirusi+'3')
+                        glRasterPos2f(0.0,0.0)
+
+                    elif self.yazirusi == "<-" and i == self.ytext_int and j > self.xtext_int:
+                        self.write_text(255,255,0,first+(j*s),first+(i*s),self.yazirusi+'3')
+                        glRasterPos2f(0.0,0.0)
+                    else:
+                        self.write_text(255,255,0,first+(j*s),first+(i*s),'3')
+                        glRasterPos2f(0.0,0.0)
         glLineWidth(3.0)
         glBegin(GL_LINES)
         glVertex2f(0.5,0)
@@ -167,7 +256,7 @@ class MainWidget(QWidget):
         self.setMinimumSize(100, 100)
         self.setMaximumSize(1000, 1000)
         self.resize(800, 800)
-        self.grabKeyboard()
+        # self.grabKeyboard()
         self.b_wid = self.problem['board']['width']
         self.b_hei = self.problem['board']['height']
         self.start_board =  [[ int(self.problem['board']['start'][y][x]) for x in range(self.b_wid)]for y in range(self.b_hei)]#スタート盤面
@@ -210,18 +299,20 @@ class MainWidget(QWidget):
                 int(self.xtext.text())
                 int(self.ytext.text())
             except ValueError:
-                self.error = 5
+
                 check_int = False
-                self.Error()
-                print('座標の値が有効ではありません')
-            if check_int:
-                self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,int(self.xtext.text),int(self.ytext.text),self)#操作盤面
+                if  not((self.xtext.text() is None) or (self.ytext.text() is None) or (self.direction_mannual_move == 0) or (self.xtext.text() == "") or (self.ytext.text()=="")):
+                    self.error = 5
+                    self.Error()
+                    print('座標の値が有効ではありません')
+            if check_int and (int(self.xtext.text()) >= 0 ) and int(self.ytext.text()) >= 0 and int(self.ytext.text()) < self.b_hei and int(self.xtext.text()) < self.b_wid:
+                self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,int(self.xtext.text()),int(self.ytext.text()),self)#操作盤面
             else:
                 self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,self)#操作盤面
 
 
         elif(self.args[3] == "a"):
-            self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,self)#操作盤面
+            self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,self.answer,self.op_idx,self)#操作盤面
 
 
         layout_gl.addWidget(self.glwidget)
@@ -333,6 +424,8 @@ class MainWidget(QWidget):
             self.Error()
             print('座標の値が有効ではありません')
             return
+        self.update()
+        self.glwidget.update()
 
 
 
@@ -404,14 +497,32 @@ class MainWidget(QWidget):
             print(f'座標: x:{x}y:{y} 次の行動: {self.dict_action[s]} にずらす' )
         painter.setPen(QColor("red"))
         if self.args[3] == "m":
-            print(f'x内容{self.xtext.text()}')
+            print(f'x内容{(self.xtext.text())}')
             print(f'y内容{self.ytext.text()}')
             print(f'方向内容{self.dict_action[self.direction_mannual_move-1] if self.direction_mannual_move > 0 else " "}')
+            try:#x座標,y座標は数字になっているか
+                self.glwidget.xtext_int = int(self.xtext.text())
+                self.glwidget.ytext_int = int(self.ytext.text())
+                print(f'移動座標{int(self.xtext.text())},{int(self.ytext.text())}')
+            except ValueError:
+                pass
+            if self.direction_button_up.isChecked():
+                self.glwidget.yazirusi = "v"
+            elif self.direction_button_down.isChecked():
+                self.glwidget.yazirusi = "^"
+            elif self.direction_button_left.isChecked():
+                self.glwidget.yazirusi = "->"
+            elif self.direction_button_right.isChecked():
+                self.glwidget.yazirusi = "<-"
+            self.glwidget.update()
+
 
 
         painter.setBrush(QColor("white"))
 
         font = painter.font()
+
+
 
 
 
@@ -457,6 +568,8 @@ class MainWidget(QWidget):
             self.releaseKeyboard()
         else:
             self.grabKeyboard()
+        self.update()
+        self.glwidget.update()
 
         print(f"Clicked x:{x}  y:{y}")
 
