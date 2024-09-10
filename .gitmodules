@@ -1,0 +1,6 @@
+[submodule "solvers/beam/libs/json"]
+	path = solvers/beam/libs/json
+	url = https://github.com/nlohmann/json
+[submodule "solvers/beam/libs/acutest"]
+	path = solvers/beam/libs/acutest
+	url = https://github.com/mity/acutest
