@@ -27,8 +27,8 @@ class OpenGLWidget(QOpenGLWidget):
         self.goal_board = goal_board
         self.zoom = zoom
         self.zoom_direction = zoom_direction
-        self.setMinimumSize(100, 100)
-        self.setMaximumSize(400, 400)
+        self.setMinimumSize(10, 10)
+        self.setMaximumSize(5000, 5000)
         self.zoomx = 0
         self.zoomy = 0
         self.xtext_int = xtext_int
@@ -285,4 +285,50 @@ class OpenGLWidget(QOpenGLWidget):
         glutSwapBuffers()
 
     def resizeGL(self, width, height):
+        print(f"height:{height},width:{width}")
+        print(f"最小{min(height,width)}")
+
+        # # ウィンドウサイズが変更された時に呼ばれる
+        # if height == 0:
+        #     height = 1  # ゼロ割防止
+
+        # # ウィンドウ全体をビューポートに設定
+        # glViewport(0, 0, width, height)
+
+        # # 投影行列を設定
+        # glMatrixMode(GL_PROJECTION)
+        # glLoadIdentity()
+
+        # # アスペクト比に応じて正投影行列を設定
+        # aspect_ratio = width / height
+        # if aspect_ratio > 1.0:
+        #     # 横長のウィンドウの場合
+        #     glOrtho(-aspect_ratio, aspect_ratio, -1.0, 1.0, -1.0, 1.0)
+        # else:
+        #     # 縦長のウィンドウの場合
+        #     glOrtho(-1.0, 1.0, -1.0 / aspect_ratio, 1.0 / aspect_ratio, -1.0, 1.0)
+
+        # glMatrixMode(GL_MODELVIEW)
+
+        # ウィンドウのサイズ変更時に呼ばれる
+        if height == 0:
+            height = 1  # ゼロ除算を防ぐため高さを1に設定
+
+        # ビューポートをウィンドウサイズに合わせて設定
         glViewport(0, 0, width, height)
+
+        # アスペクト比に応じた投影行列を設定
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+
+        aspect_ratio = width / height
+        if aspect_ratio > 1.0:
+            # 横長の場合は横に広げる
+            glOrtho(-aspect_ratio, aspect_ratio, -1.0, 1.0, -1.0, 1.0)
+        else:
+            # 縦長の場合は縦に広げる
+            glOrtho(-1.0, 1.0, -1.0 / aspect_ratio, 1.0 / aspect_ratio, -1.0, 1.0)
+
+        glMatrixMode(GL_MODELVIEW)
+
+
