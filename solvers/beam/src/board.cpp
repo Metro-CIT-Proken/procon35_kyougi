@@ -29,7 +29,7 @@ Problem Problem::fromJson(std::istream &stream)
             height = patterns[i]["height"],
             id = patterns[i]["p"];
         std::vector<std::string> cells_str = patterns[i]["cells"];
-        CellType cells(height);
+        CellsType<char> cells(height);
         for(int j = 0; j < height; j++) {
             cells[j].resize(width);
             for(int k = 0; k < width; k++) {
@@ -40,12 +40,14 @@ Problem Problem::fromJson(std::istream &stream)
         prob.stencils.emplace(id, stenc);
     }
 
+    prob.calculateLegalActions();
+
     return std::move(prob);
 }
 
 void Problem::createDefaultStencils()
 {
-    CellType cells1x1 = {
+    CellsType<char> cells1x1 = {
         {1}
     };
     Stencil stenc1x1(0, cells1x1, this);
@@ -61,7 +63,7 @@ void Problem::createDefaultStencils()
         int size = 1 << e;
         for(int i = 0; i < filters.size(); i++) {
             int id = (e - 1) * 3 + i + 1;
-            CellType cells(size, std::vector<char>(size));
+            CellsType<char> cells(size, std::vector<char>(size));
             for(int y = 0; y < size; y++) {
                 for(int x = 0; x < size; x++) {
                     cells[y][x] = filters[i](x, y);
@@ -73,7 +75,7 @@ void Problem::createDefaultStencils()
     }
 }
 
-void Stencil::calculateLegalActions()
+void Stencil::calculateLegalActions(std::set<CellsType<int>> &excludedBoards)
 {
     auto prob = this->problem;
     BoardBase<int> test_board(prob->width, prob->height);
@@ -84,18 +86,65 @@ void Stencil::calculateLegalActions()
     }
     
     this->_legalActions.clear();
-    std::set<decltype(test_board)::CellsType> actions;
     for(int y = 1 - this->height; y < this->problem->start.height; y++) {
         for(int x = 1 - this->width; x < this->problem->start.width; x++) {
             for(StencilDirection s = StencilDirection::UP; s <= StencilDirection::RIGHT; ((int &)s)++) {
                 auto new_board = test_board;
                 new_board.advance(*this, x, y, (StencilDirection)s);
-                if(actions.count(new_board.cells) == 0) {
+                if(excludedBoards.count(new_board.cells) == 0) {
                     Action act{this->id, x, y, (StencilDirection)s};
-                    actions.emplace(new_board.cells);
+                    excludedBoards.emplace(new_board.cells);
                     this->_legalActions.emplace_back(act);
                 }
             }
         }
     }
+}
+
+void Problem::calculateLegalActions() {
+    std::set<BoardBase<int>::CellsType> legalBoards;
+    std::cerr << "calculating legal boards..." << std::endl;
+
+    for(auto it = stencils.begin(); it != stencils.end(); it++) {
+        it->second.calculateLegalActions(legalBoards);
+        std::cerr << std::distance(stencils.begin(), it) << "/" << stencils.size() << std::endl;
+    }
+}
+
+Problem Problem::crop(int x, int y, int width, int height) const
+{
+    Problem res = *this;
+    res.ox = x;
+    res.oy = y;
+    res.width = width;
+    res.height = height;
+
+    auto &start = res.start;
+    start.width = width;
+    start.height = height;
+    start.cells = {start.cells.begin() + y, start.cells.begin() + y + height};
+    for(auto it = start.cells.begin(); it != start.cells.end(); it++) {
+        *it = {it->begin() + x, it->begin() + x + width};
+    }
+
+    auto &goal = res.goal;
+    goal.width = width;
+    goal.height = height;
+    goal.cells = {goal.cells.begin() + y, goal.cells.begin() + y + height};
+    for(auto it = goal.cells.begin(); it != goal.cells.end(); it++) {
+        *it = {it->begin() + x, it->begin() + x + width};
+    }
+
+    return res;
+}
+
+Problem Problem::apply(std::vector<Action> acts) const
+{
+    auto result = *this;
+    for(auto it = acts.begin(); it != acts.end(); it++) {
+        result.start.advance(result.stencils.at(it->p), it->x, it->y, it->s);
+        result.goal.advance(result.stencils.at(it->p), it->x, it->y, it->s);
+    }
+
+    return std::move(result);
 }

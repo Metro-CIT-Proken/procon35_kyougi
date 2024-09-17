@@ -156,6 +156,22 @@ void test_board() {
     if(!TEST_CHECK(right_cells == right.cells)) {
         print_board(right_cells, right.cells);
     }
+
+    {
+        auto cropped_prob = prob.crop(1, 1, 6, 6);
+        int oy = cropped_prob.oy,
+            ox = cropped_prob.ox;
+        for(int y = 0; y < cropped_prob.height; y++) {
+            for(int x = 0; x < cropped_prob.width; x++) {
+                if(!TEST_CHECK(cropped_prob.start.cells[y][x] == prob.start.cells[oy + y][ox + x])) {
+                    TEST_MSG("failed at (%d, %d)", x, y);
+                }
+                if(!TEST_CHECK(cropped_prob.goal.cells[y][x] == prob.goal.cells[oy + y][ox + x])) {
+                    TEST_MSG("failed at (%d, %d)", x, y);
+                }
+            }
+        }
+    }
 }
 
 TEST_LIST = {
