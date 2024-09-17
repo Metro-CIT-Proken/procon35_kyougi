@@ -4,14 +4,14 @@
 #include <nlohmann/json.hpp>
 
 #include "board.h"
-#include "BeamSolver.cpp"
+#include "VDivideSolver.h"
 
 int main(int argc, char **argv) {
     std::cout << argv[1] << std::endl;
     std::ifstream f(argv[1]);
     const Problem prob = Problem::fromJson(f);
 
-    BeamSolver solver(10, INT32_MAX);
+    VDivideSolver solver(32);
     auto answer = solver.solve(prob);
 
     nlohmann::json answer_json;
@@ -25,6 +25,7 @@ int main(int argc, char **argv) {
         });
     }
 
+    std::cerr << "answer ops " << answer.size() << std::endl;
     std::ofstream output("answer.json");
     output << answer_json.dump(2);
 }

@@ -4,8 +4,11 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <set>
 
-using CellType = std::vector<std::vector<char>>;
+template<typename CellValueType>
+using CellsType = std::vector<std::vector<CellValueType>>;
+
 class Problem;
 
 enum StencilDirection : int {
@@ -21,14 +24,13 @@ struct Action
 class Stencil
 {
 public:
-    Stencil(int id, const CellType &cells, const Problem *prob) : 
+    Stencil(int id, const CellsType<char> &cells, const Problem *prob) : 
         id(id), 
         height(cells.size()),
         width(height == 0 ? 0 : cells[0].size()), 
         cells(cells), 
         problem(prob)
     {
-        calculateLegalActions();
     }
 
     bool isDefaultH() const
@@ -64,8 +66,9 @@ public:
         return this->_legalActions;
     }
 
+    void calculateLegalActions(std::set<CellsType<int>> &excluded);
+
 private:
-    void calculateLegalActions();
     std::vector<Action> _legalActions;
 };
 
@@ -196,7 +199,9 @@ public:
         width(w), 
         height(h), 
         start(w, h), 
-        goal(w, h)
+        goal(w, h),
+        ox(0),
+        oy(0)
     {
         createDefaultStencils();
     }
@@ -205,7 +210,13 @@ public:
 
     static Problem fromJson(std::istream &);
 
+    void calculateLegalActions();
+
+    Problem apply(std::vector<Action> acts) const;
+    Problem crop(int x, int y, int width, int height) const;
+
     Board start, goal;
     int width, height;
+    int ox, oy;
     std::map<int, Stencil> stencils;
 };
