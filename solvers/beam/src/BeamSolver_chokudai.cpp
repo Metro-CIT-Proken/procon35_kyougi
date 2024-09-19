@@ -2,23 +2,44 @@
 #include <iostream>
 #include <queue>
 
+#include <x86intrin.h>
+
 #include "board.h"
 #include "bitboard.h"
 #include "BeamSolver.h"
 
 using std::cout, std::cerr, std::endl;
 
+std::vector<WordType> evaluateMask = {
+    0x0000000000000000, // 0000...
+    0x5555555555555555, // 0101...
+    0xAAAAAAAAAAAAAAAA, // 1010...
+    0xFFFFFFFFFFFFFFFF  // 1111...
+};
+
 static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &board)
 {
     int eval = 0;
     bool end = false;
     for(int y = 0; y < prob.prob->height; y++) {
-        // 最適化のためのコード
-        // const int words_count = (CELL_BITS * prob.prob->width + WORD_BITS - 1) / WORD_BITS;
-        // for(int w = 0; w < words_count; w++) {
-        //     if(board.cells[y][w] != prob.goal.cells[y][w]) {
+        // for(int w = 0; w < board.wordsPerLine; w++) {
+        //     auto &test_word = board.getWord(y, w),
+        //         &goal_word  = prob.goal.getWord(y, w);
+        //     if(test_word != goal_word) {
+        //         auto diff = test_word ^ goal_word;
+        //         int diff_x = _lzcnt_u64(diff) / CELL_BITS;
+        //         eval += 1000 * diff_x;
 
+
+        //         for(int wj = w + 1; w < board.wordsPerLine; wj++) {
+
+        //         }
+
+        //         end = true;
+        //         break;
         //     }
+
+        //     eval += 1000 * (WORD_BITS / CELL_BITS);
         // }
 
         for(int x = 0; x < prob.prob->width; x++) {
@@ -51,11 +72,11 @@ std::vector<Action> ChokudaiBeamSolver::solve(const Problem &prob_normal)
     using std::cout, std::cerr, std::endl;
 
     Problem_bitboard prob(&prob_normal);
-    int beam_count = 50;
-    std::vector<std::priority_queue<BeamState, std::vector<BeamState>, BeamState::Comp>> beam(this->beamD + 1);
+    int beam_count = 3;
+    std::vector<std::priority_queue<BeamState>> beam(this->beamD + 1);
     auto board_start = std::make_shared<Board_bitboard>(prob.start);
     beam[0].push(BeamState{board_start, 0, 0, 0, 0, StencilDirection::UP, nullptr});
-    int eval_max = -1;
+    int eval_max = -1;  
 
     std::shared_ptr<BeamState> best_state;
     int best_ops = INT32_MAX;
@@ -124,7 +145,7 @@ std::vector<Action> ChokudaiBeamSolver::solve(const Problem &prob_normal)
                         // 盤面が完成しているかどうか判定する
                         if(eval != prob_normal.width * prob_normal.height * 1000) {
                             // 未完成ならキューにいれて、次の探索へ
-                            next_q.emplace(new_state);
+                            next_q.push(new_state);
                         }
                         else {
                             // 完成なら解答をまとめてreturnする
@@ -159,8 +180,8 @@ std::vector<Action> InboundChokudaiBeamSolver::solve(const Problem &prob_normal)
     using std::cout, std::cerr, std::endl;
 
     Problem_bitboard prob(&prob_normal);
-    int beam_count = 50;
-    std::vector<std::priority_queue<BeamState, std::vector<BeamState>, BeamState::Comp>> beam(this->beamD + 1);
+    int beam_count = 3;
+    std::vector<std::priority_queue<BeamState>> beam(this->beamD + 1);
     auto board_start = std::make_shared<Board_bitboard>(prob.start);
     beam[0].push(BeamState{board_start, 0, 0, 0, 0, StencilDirection::UP, nullptr});
     int eval_max = -1;

@@ -12,19 +12,9 @@ public:
     {
     }
 
-    struct Comp {
-        bool operator()(const BeamState &left,  const BeamState &right)
-        {
-            return left.eval < right.eval;
-        }
-    };
-
-    struct ReversedComp {
-        bool operator()(const BeamState &left,  const BeamState &right)
-        {
-            return left.eval > right.eval;
-        }
-    };
+    bool operator<(const BeamState &right) const {
+        return this->eval < right.eval;
+    }
 
     std::shared_ptr<Board_bitboard> board;
     int eval, p, x, y;

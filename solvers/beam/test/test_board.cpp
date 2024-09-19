@@ -81,7 +81,7 @@ void test_board() {
 }
 )";
     std::stringstream ss(json_str);
-    Problem prob = Problem::fromJson(ss);
+    auto prob = Problem::fromJson(ss);
 
     std::vector<std::vector<char>> stencil27 = {
         {1, 1, 0, 0, 0},
@@ -89,12 +89,12 @@ void test_board() {
         {1, 1, 1, 0, 0},
         {0, 1, 0, 0, 1}
     };
-    if(!TEST_CHECK(stencil27 == prob.stencils.at(27).cells)) {
-        print_board(stencil27, prob.stencils.at(27).cells);
+    if(!TEST_CHECK(stencil27 == prob->stencils.at(27).cells)) {
+        print_board(stencil27, prob->stencils.at(27).cells);
     }
 
-    auto up = prob.start;
-    up.advance(prob.stencils.at(27), 1, 1, StencilDirection::UP);
+    auto up = prob->start;
+    up.advance(prob->stencils.at(27), 1, 1, StencilDirection::UP);
     std::vector<std::vector<char>> up_cells = {
         {3, 2, 1, 1, 0, 0, 1, 2},
         {0, 3, 3, 3, 3, 0, 1, 2},
@@ -109,8 +109,8 @@ void test_board() {
         print_board(up_cells, up.cells);
     }
 
-    auto down = prob.start;
-    down.advance(prob.stencils.at(27), 1, 1, StencilDirection::DOWN);
+    auto down = prob->start;
+    down.advance(prob->stencils.at(27), 1, 1, StencilDirection::DOWN);
     std::vector<std::vector<char>> down_cells = {
         {3, 3, 3, 1, 1, 2, 1, 2},
         {0, 0, 0, 1, 0, 0, 1, 2},
@@ -125,8 +125,8 @@ void test_board() {
         print_board(down_cells, down.cells);
     }
 
-    auto left = prob.start;
-    left.advance(prob.stencils.at(27), 1, 1, StencilDirection::LEFT);
+    auto left = prob->start;
+    left.advance(prob->stencils.at(27), 1, 1, StencilDirection::LEFT);
     std::vector<std::vector<char>> left_cells = {
         {3, 2, 1, 1, 0, 0, 1, 2},
         {0, 3, 3, 0, 1, 2, 3, 3},
@@ -141,8 +141,8 @@ void test_board() {
         print_board(left_cells, left.cells);
     }
 
-    auto right = prob.start;
-    right.advance(prob.stencils.at(27), 1, 1, StencilDirection::RIGHT);
+    auto right = prob->start;
+    right.advance(prob->stencils.at(27), 1, 1, StencilDirection::RIGHT);
     std::vector<std::vector<char>> right_cells = {
         {3, 2, 1, 1, 0, 0, 1, 2},
         {3, 3, 0, 3, 3, 0, 1, 2},
@@ -158,15 +158,15 @@ void test_board() {
     }
 
     {
-        auto cropped_prob = prob.crop(1, 1, 6, 6);
-        int oy = cropped_prob.oy,
-            ox = cropped_prob.ox;
-        for(int y = 0; y < cropped_prob.height; y++) {
-            for(int x = 0; x < cropped_prob.width; x++) {
-                if(!TEST_CHECK(cropped_prob.start.cells[y][x] == prob.start.cells[oy + y][ox + x])) {
+        auto cropped_prob = prob->crop(1, 1, 6, 6);
+        int oy = cropped_prob->oy,
+            ox = cropped_prob->ox;
+        for(int y = 0; y < cropped_prob->height; y++) {
+            for(int x = 0; x < cropped_prob->width; x++) {
+                if(!TEST_CHECK(cropped_prob->start.cells[y][x] == prob->start.cells[oy + y][ox + x])) {
                     TEST_MSG("failed at (%d, %d)", x, y);
                 }
-                if(!TEST_CHECK(cropped_prob.goal.cells[y][x] == prob.goal.cells[oy + y][ox + x])) {
+                if(!TEST_CHECK(cropped_prob->goal.cells[y][x] == prob->goal.cells[oy + y][ox + x])) {
                     TEST_MSG("failed at (%d, %d)", x, y);
                 }
             }
