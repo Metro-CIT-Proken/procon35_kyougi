@@ -27,8 +27,8 @@ class OpenGLWidget(QOpenGLWidget):
         self.goal_board = goal_board
         self.zoom = zoom
         self.zoom_direction = zoom_direction
-        self.setMinimumSize(10, 10)
-        self.setMaximumSize(5000, 5000)
+        self.setMinimumSize(0, 0)
+        self.setMaximumSize(1000, 1000)
         self.zoomx = 0
         self.zoomy = 0
         self.xtext_int = xtext_int
@@ -38,6 +38,7 @@ class OpenGLWidget(QOpenGLWidget):
         self.yazirusi = ""
         # self.args = args
         self.fournflag = fournflag
+
 
 
 
@@ -109,44 +110,30 @@ class OpenGLWidget(QOpenGLWidget):
         glScale(2/self.zoom, 2/self.zoom, 1)
 
 
-        # x = None
-        # y = None
-        # print(self.args)
-        # if not(self.answer == None or self.op_idx == None):
-        #     x = self.answer["ops"][self.op_idx]["x"]
-        #     y = self.answer["ops"][self.op_idx]["y"]
+
 
         glBegin(GL_QUADS)
 
         for i in range(height_square):
             for j in range(width_square):
-                print(self.fournflag)
                 if not(self.fournflag) and not(self.fournflag == None):
-                        print(f'sssss{self.search_near_goal(j,i)}')
                         ratio = self.search_near_goal(j,i)/max(self.b_hei,self.b_wid)*3#距離が遠ければ色が薄くなり近くなれば濃くなる
                         saturation = 90*(1.0-ratio)
                         h,ss,v = color[self.board[i][j]]*60,int(saturation*255//100),255
-                        print(h,ss,v)
                         r,g,b = self.hsv_to_rgb(h,ss,v)
-                        print(r,g,b)
                         glColor3f(r, g, b)
 
 
 
                 elif self.board[i][j] == self.goal_board[i][j] and not(self.fournflag == None):
-                    print('tttt')
                     glColor3f(167/255,87/255,168/255)
                 elif self.board[i][j] == 0 and not(self.fournflag == None):
-                    print('ppppp')
                     glColor3f(1.0, 0.0, 0.0)
                 elif self.board[i][j] == 1 and not(self.fournflag == None):
-                    print('88888')
                     glColor3f(0.0,0.0,1.0)
                 elif self.board[i][j] == 2 and not(self.fournflag == None):
-                    print(999999)
                     glColor3f(0.0,1.0,0.0)
                 elif self.board[i][j] == 3 and not(self.fournflag == None):
-                    print('#######')
                     glColor3f(1.0,1.0,0.0)
 
                 elif self.ytext_int == i and self.xtext_int == j and not(self.fournflag == None):
@@ -163,12 +150,10 @@ class OpenGLWidget(QOpenGLWidget):
                     ratio = self.search_near_goal(j,i)/max(self.b_hei,self.b_wid)*3#距離が遠ければ色が薄くなり近くなれば濃くなる
                     saturation = 90*(1.0-ratio)
                     h,ss,v = color[self.board[i][j]]*60,int(saturation*255//100),255
-                    print(h,ss,v)
                     r,g,b = self.hsv_to_rgb(h,ss,v)
                     r*=255
                     g*=255
                     b*=255
-                    print(r,g,b)
                     if self.ytext_int is not  None  and self.xtext_int is not  None and self.yazirusi == "v" and i > self.ytext_int and j == self.xtext_int:
                         self.write_text(r,g,b,first+(j*s),first+(i*s),self.yazirusi+str(self.board[i][j]))
                         glRasterPos2f(0.0,0.0)
@@ -332,3 +317,5 @@ class OpenGLWidget(QOpenGLWidget):
         glMatrixMode(GL_MODELVIEW)
 
 
+    def mousePressEvent(self,event):
+        self.update()

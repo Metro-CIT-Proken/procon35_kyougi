@@ -10,18 +10,19 @@ import json
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
+from scroll_widget import *
+
 
 
 
 
 class MainWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self,parent=None):
         super().__init__(parent)
         self.args = sys.argv
         try:
             arg2 = self.args[2]
         except:
-            print("引数が足りません")
             exit(1)
 
         with open(self.args[1]) as f:
@@ -29,21 +30,37 @@ class MainWidget(QWidget):
         with open(self.args[2]) as f:
             self.answer = json.load(f)
 
-        self.setMinimumSize(100, 100)
-        self.setMaximumSize(1000, 1000)
-        self.resize(800, 800)
+        # self.setMinimumSize(100, 100)
+        # self.setMaximumSize(1000, 1000)
+        # self.resize(1000, 1000)
         # self.grabKeyboard()
+
+        self.fixed_form_num =  self.problem['general']['n']
+        self.fixed_form_numbers = [ self.problem['general']['patterns'][x]['p'] for x in range(self.fixed_form_num)]
+        self.fixed_form_widths = { self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['width'] for x in range(self.fixed_form_num)}
+        self.fixed_form_heights = {self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['height'] for x in range(self.fixed_form_num)}
+        self.fixed_form_cells = {self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['cells'] for x in range(self.fixed_form_num)}
+        print(f"numbers: {self.fixed_form_numbers}")
+        print(f"widths: {self.fixed_form_widths}")
+        print(f'heights: {self.fixed_form_heights}')
+        print(f'cells: {self.fixed_form_cells}')
         self.b_wid = self.problem['board']['width']
         self.b_hei = self.problem['board']['height']
+        self.widgets_list = [[]]
         self.start_board =  [[ int(self.problem['board']['start'][y][x]) for x in range(self.b_wid)]for y in range(self.b_hei)]#スタート盤面
         self.goal_board = [[ int(self.problem['board']['goal'][y][x]) for x in range(self.b_wid)]for y in range(self.b_hei)]#完成盤面
         self.zoom = 1
         self.zoom_direction = 0
-        layout = QVBoxLayout(self)
-        self.setLayout(layout)
+        layout = QHBoxLayout(self)
+        layout_cont = QVBoxLayout()
+        layout_gl = QHBoxLayout()
 
-        layout_gl = QHBoxLayout(self)
-        layout.addLayout(layout_gl)
+
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.addLayout(layout_cont,1)
+        # layout.addLayout(layout_gl,2)
+        layout.addLayout(layout_gl,2)
+
 
         self.error_text = ""
 
@@ -66,19 +83,20 @@ class MainWidget(QWidget):
         self.painter_text = QLabel("")
         self.painter_text.setFixedSize(200,50)
         self.stack_move = [[]]
-        layout.addWidget(self.painter_text)
+        layout_cont.addWidget(self.painter_text)
         self.error_label = QLabel("")
         fournflag = False
 
         try:
                 self.args[4]
-                print(self.args[4])
         except IndexError:
                 self.args.append("")
                 fournflag = True
         if(self.args[3] == "m"):
             self.ytext = QLineEdit(self)#入力フォームを追加(y座標)
             self.xtext  = QLineEdit(self)#入力フォームを追加(x座標)
+            self.nukigata_hen = QLineEdit(self)
+            self.cell_type_line = QLineEdit(self)
 
             try:#x座標,y座標は数字になっているか
                 int(self.xtext.text())
@@ -88,7 +106,6 @@ class MainWidget(QWidget):
                 if  not((self.xtext.text() is None) or (self.ytext.text() is None) or (self.direction_mannual_move == 0) or (self.xtext.text() == "") or (self.ytext.text()=="")):
                     self.error = 5
                     self.Error()
-                    print('座標の値が有効ではありません')
 
             if check_int and (int(self.xtext.text()) >= 0 ) and int(self.ytext.text()) >= 0 and int(self.ytext.text()) < self.b_hei and int(self.xtext.text()) < self.b_wid and not(self.args[4] == 's'):
                 self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,int(self.xtext.text()),int(self.ytext.text()),None,self)#操作盤面
@@ -107,10 +124,16 @@ class MainWidget(QWidget):
                 self.glwidget = OpenGLWidget(self.start_board,self.goal_board,self.zoom,self.zoom_direction,None,None,None,self)#操作盤面
 
 
-        layout_gl.addWidget(self.glwidget)
+
         self.glwidget_goal = OpenGLWidget(self.goal_board,[[ -1 for x in range(self.b_wid)]for y in range(self.b_hei)],self.zoom,self.zoom_direction,self)#目的の盤面
-        self.painter_layout = QVBoxLayout()
-        layout_gl.addWidget(self.glwidget_goal)
+
+
+
+        scroll_area = ScrollWidget(self.glwidget,self.glwidget_goal)
+
+
+        layout_gl.addWidget(scroll_area)
+
         self.error = 0
         if self.args[3] == "a":#自動で移動する場合
             self.slider = QSlider(Qt.Orientation.Horizontal)
@@ -119,14 +142,15 @@ class MainWidget(QWidget):
             self.slider.setTickInterval(1)
             self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
             self.slider.valueChanged.connect(self.onSliderChange)
-            layout.addWidget(self.slider)
+            layout_cont.addWidget(self.slider)
         elif self.args[3] == "m":#手動モードの場合
-            direction_button_layout = QHBoxLayout(self)
-            text_layout = QVBoxLayout(self)
-            layout.addLayout(direction_button_layout)
-            layout.addLayout(text_layout)
-            # self.stext = QLineEdit(self)
-
+            # direction_button_layout = QHBoxLayout(self)
+            # text_layout = QVBoxLayout(self)
+            # layout_cont.addLayout(direction_button_layout)
+            # layout_cont.addLayout(text_layout)
+            # self.stext  = QLineEdit(self)
+            layout_button = QHBoxLayout()
+            layout_cont.addLayout(layout_button)
             self.direction_button_right = QRadioButton("右")#移動する方向を決めるボタン
             self.direction_button_left = QRadioButton("左")
             self.direction_button_up = QRadioButton("上")
@@ -134,39 +158,57 @@ class MainWidget(QWidget):
 
 
 
-            direction_button_layout.addWidget(self.direction_button_up)
+            layout_button.addWidget(self.direction_button_up)
             self.direction_button_up.clicked.connect(self.up_move)
-            direction_button_layout.addWidget(self.direction_button_down)
+            layout_button.addWidget(self.direction_button_down)
             self.direction_button_down.clicked.connect(self.down_move)
-            direction_button_layout.addWidget(self.direction_button_left)
+            layout_button.addWidget(self.direction_button_left)
             self.direction_button_left.clicked.connect(self.left_move)
-            direction_button_layout.addWidget(self.direction_button_right)
+            layout_button.addWidget(self.direction_button_right)
             self.direction_button_right.clicked.connect(self.right_move)
 
+            layout_text = QHBoxLayout()
+            layout_text2 = QHBoxLayout()
+            layout_cont.addLayout(layout_text)
+            layout_cont.addLayout(layout_text2)
 
 
             self.error_label.setFixedSize(200,50)
-            text_layout.addWidget(self.error_label)
+            layout_cont.addWidget(self.error_label)
 
             self.xlabel = QLabel("x座標")
-            text_layout.addWidget(self.xlabel)
+            layout_text.addWidget(self.xlabel)
             self.xlabel.setFixedSize(50,20)
+            layout_text.addWidget(self.xtext)
 
-            text_layout.addWidget(self.xtext)
             self.ylabel = QLabel("y座標")
             self.ylabel.setFixedSize(50,20)
-            text_layout.addWidget(self.ylabel)
+            layout_text.addWidget(self.ylabel)
+            layout_text.addWidget(self.ytext)
 
-            text_layout.addWidget(self.ytext)
+            self.nukigata_hen_label = QLabel("抜き型の辺の長さ")
+            self.nukigata_hen_label.setFixedSize(50,20)
+            layout_text2.addWidget(self.nukigata_hen_label)
+            layout_text2.addWidget(self.nukigata_hen)
+
+            self.cell_type_label = QLabel("セルのタイプ")
+            self.cell_type_label.setFixedSize(50,20)
+            layout_text2.addWidget(self.cell_type_label)
+            layout_text2.addWidget(self.cell_type_line)
 
 
+            layout_action = QHBoxLayout()
+            layout_cont.addLayout(layout_action)
             self.button = QPushButton('Move')#動かす処理を実行するボタンを追加
 
-            layout.addWidget(self.button)
+            layout_action.addWidget(self.button)
             self.button.clicked.connect(self.on_button_click)
             self.back_button = QPushButton('Back')
-            layout.addWidget(self.back_button)
+            layout_action.addWidget(self.back_button)
             self.back_button.clicked.connect(self.on_back_button_click)
+
+
+
 
 
 
@@ -186,7 +228,6 @@ class MainWidget(QWidget):
 
 
     def on_back_button_click(self):#「Back」のボタンを押した場合
-
         if  self.op_idx >= 1:
             prev_list = self.stack_move.pop()
             self.back(prev_list[0],prev_list[1],self.direction_mannual_move-1)
@@ -203,7 +244,7 @@ class MainWidget(QWidget):
 
 
     def on_button_click(self):#Moveボタンが押されたときの処理
-        if  (self.xtext.text() is None) or (self.ytext.text() is None) or (self.direction_mannual_move == 0) or (self.xtext.text() == "") or (self.ytext.text()==""):
+        if  (self.xtext.text() is None) or (self.ytext.text() is None) or (self.direction_mannual_move == 0) or (self.xtext.text() == "") or (self.ytext.text()=="") or (self.nukigata_hen.text() == "") or (self.nukigata_hen.text() == None):
             self.error = 4
             self.Error()
             print("入力してください")
@@ -211,10 +252,12 @@ class MainWidget(QWidget):
         try:#x座標,y座標は数字になっているか
             int(self.xtext.text())
             int(self.ytext.text())
+            int(self.nukigata_hen.text())
+            int(self.cell_type_line.text())
         except ValueError:
             self.error = 5
             self.Error()
-            print('座標の値が有効ではありません')
+            print('値が有効ではありません')
             return
         self.update()
         self.glwidget.update()
@@ -222,10 +265,10 @@ class MainWidget(QWidget):
 
 
 
-        if (0 <= int(self.xtext.text()) and int(self.xtext.text()) < self.b_wid):#x座標が範囲外の場合
+        if (0 <= int(self.xtext.text()) + int(self.nukigata_hen.text()) and int(self.xtext.text()) < self.b_wid):#x座標が範囲外の場合
 
-                if (0 <= int(self.ytext.text()) and int(self.ytext.text()) < self.b_hei ):#y座標が範囲外の場合
-                    self.move(int(self.xtext.text()),int(self.ytext.text()),self.direction_mannual_move-1)#入力したx座標,y座標,方向を盤面を動かす関数に送る
+                if (0 <= int(self.ytext.text()) + int(self.nukigata_hen.text()) and int(self.ytext.text()) < self.b_hei ):#y座標が範囲外の場合
+                    self.move(int(self.xtext.text()),int(self.ytext.text()),self.direction_mannual_move-1,self.nukigata_hen.text(),self.cell_type_line)#入力したx座標,y座標,方向を盤面を動かす関数に送る
                     self.stack_move.append([int(self.xtext.text()),int(self.ytext.text())])
                 else:
                     self.error = 2
@@ -244,29 +287,26 @@ class MainWidget(QWidget):
 
     def Error(self):
         if self.error == 1:
-            self.error_label.setText("指定したx座標が範囲外です")
-            print('error 1')
+            self.error_label.setText("指定したx座標が範囲外です。x座標または辺の長さを変更してください")
         elif self.error == 2:
             self.error_label.setText("指定したy座標が範囲外です")
-            print('error 2')
         elif self.error == 3:
-            self.error_label.setText("方向が指定できていません 上、下、左、右のどちらかを指定してください。")
-            print('error 3')
+            self.error_label.setText("方向が指定できていません 上、下、左、右のどちらかを指定してください。y座標または辺の長さを変更してください")
         elif self.error == 4:
             self.error_label.setText("入力してください")
-            print('error 4')
         elif self.error == 5:
             self.error_label.setText("入力した値が数字ではありません")
-            print("error5")
         elif self.error == 6:
             self.error_label.setText("これ以上戻せません")
-            print("error6")
 
         else:
             self.error_label.setText("")
 
 
     def paintEvent(self, event):
+
+
+
         if not(self.op_idx >= self.answer["n"]):
             x = self.answer["ops"][self.op_idx]["x"]
             y = self.answer["ops"][self.op_idx]["y"]
@@ -280,22 +320,16 @@ class MainWidget(QWidget):
 
         if(self.args[3] == "a"):
             self.painter_text.setText(f'{self.op_idx}手目 あと {self.answer["n"]-self.op_idx}手')
-            print(f'{self.op_idx}手目 あと {self.answer["n"]-self.op_idx}手')
         elif(self.args[3] == "m"):
             self.painter_text.setText(f'{self.op_idx}手目 ')
-            print(f'{self.op_idx}手目')
         if not(self.op_idx >= self.answer["n"]):
             painter.drawText(action_text_point,f'座標: x:{x}y:{y} 次の行動: {self.dict_action[s]} にずらす')
-            print(f'座標: x:{x}y:{y} 次の行動: {self.dict_action[s]} にずらす' )
         painter.setPen(QColor("red"))
         if self.args[3] == "m":
-            print(f'x内容{(self.xtext.text())}')
-            print(f'y内容{self.ytext.text()}')
-            print(f'方向内容{self.dict_action[self.direction_mannual_move-1] if self.direction_mannual_move > 0 else " "}')
+
             try:#x座標,y座標は数字になっているか
                 self.glwidget.xtext_int = int(self.xtext.text())
                 self.glwidget.ytext_int = int(self.ytext.text())
-                print(f'移動座標{int(self.xtext.text())},{int(self.ytext.text())}')
             except ValueError:
                 pass
             if self.direction_button_up.isChecked():
@@ -344,9 +378,8 @@ class MainWidget(QWidget):
         else:
             self.grabKeyboard()
         self.update()
-        self.glwidget.update()
+        # self.glwidget.update()
 
-        print(f"Clicked x:{x}  y:{y}")
 
     def keyPressEvent(self, event: QKeyEvent):
         if self.args[3] == "a":
@@ -386,9 +419,6 @@ class MainWidget(QWidget):
 
 
     def ZoomController(self,num):#クリックしたキーごとに処理を実行する
-        print(f'ZOOM:{self.glwidget.zoom}')
-        print(f'ZOOMX:{self.glwidget.zoomx}')
-        print(f'ZOOMY:{self.glwidget.zoomy}')
         if num == 1:
             if self.glwidget.zoomy*self.glwidget.zoom+(self.glwidget.zoom*2)+0.1  <=  2.0:#拡大する場合ZZZ
                 self.glwidget.zoomy += 0.1
@@ -463,54 +493,142 @@ class MainWidget(QWidget):
         self.glwidget.update()
     #一手進める
     def apply_forward(self):
-        print(1)
-        print(self.op_idx)
+        cell_type = 0
+        cell_size = 0
+        p = self.answer["ops"][self.op_idx]["p"]
+        if p in self.fixed_form_numbers:
+            cells = self.fixed_form_cells[p]
+        else:
+            if p == 0:
+                cell_type = 1
+                cell_size = 1
+
+            else:
+                cell_type = int((p-1)%3+1)
+                cell_size = 2**(int((p+1)/3))
+            cells = [[ 0 for _ in range(cell_size) ] for _ in range(cell_size)]
+
+            for i in range(cell_size):
+                for j in range(cell_size):
+                    if cell_type == 1:
+                        cells[i][j] = 1
+                    elif cell_type == 2:
+                        if i % 2 == 0:
+                            cells[i][j] = 1
+                    elif cell_type == 3:
+                        if j % 2 == 0:
+                            cells[i][j] = 1
+
+
+
+
+
         x = self.answer["ops"][self.op_idx]["x"]
         y = self.answer["ops"][self.op_idx]["y"]
         s = self.answer["ops"][self.op_idx]["s"]
-        self.move(x,y,s)
+        print(f"{self.op_idx}手目")
+        print(f"x:{x}")
+        print(f"y:{y}")
+        print(f"p:{p}")
+        print(f"cell_size: {cell_size}")
+        print(f"cell_type: {cell_type}")
+        print(f"cells:")
+        for i in range(len(cells)):
+            print(cells[i])
+        self.move(x,y,s,cells)
 
 
-    def move(self,x,y,s):#ボードを変更する
-        if s == 0:
-            for i in range(y,len(self.start_board)-1):
-                self.start_board[i][x],self.start_board[i+1][x] = self.start_board[i+1][x],self.start_board[i][x]#上方向にずらす
-        elif s == 1:
-            for i in range(y,0,-1):
-                self.start_board[i][x],self.start_board[i-1][x] = self.start_board[i-1][x],self.start_board[i][x]#下方向にずらす
-        elif s == 2:
-            for i in range(x,len(self.start_board[0])-1):
-                self.start_board[y][i],self.start_board[y][i+1] = self.start_board[y][i+1],self.start_board[y][i]#左方向にずらす
+
+
+    def move(self,x,y,s,cells):#ボードを変更する
+        count = 0
+        pre_start = self.start_board
+        for a in range(len(cells)):
+            for b in range(len(cells[0])):
+                count+=1
+                if  y + a < 0 or x + b < 0 or y+a >= len(cells) or x+b >= len(cells[0]):
+                    continue
+                elif cells[a][b] == 1:
+                    if s == 0:
+                        for i in range(y+a,len(self.start_board)-1):
+                            self.start_board[i][x+b],self.start_board[i+1][x+b] = self.start_board[i+1][x+b],self.start_board[i][x+b]#上方向にずらす
+                    elif s == 1:
+                        for i in range(y+a,0,-1):
+                            self.start_board[i][x+b],self.start_board[i-1][x+b] = self.start_board[i-1][x+b],self.start_board[i][x+b]#下方向にずらす
+                    elif s == 2:
+                        for i in range(x+b,len(self.start_board[0])-1):
+                            self.start_board[y+a][i],self.start_board[y+a][i+1] = self.start_board[y+a][i+1],self.start_board[y+a][i]#左方向にずらす
+                    else:
+                        for i in range(x+b,0,-1):
+                            self.start_board[y+a][i],self.start_board[y+a][i-1] = self.start_board[y+a][i-1],self.start_board[y+a][i]#右方向にずらす
+        print(count)
+        if pre_start == self.start_board:
+            print("Good")
         else:
-            for i in range(x,0,-1):
-                self.start_board[y][i],self.start_board[y][i-1] = self.start_board[y][i-1],self.start_board[y][i]#右方向にずらす
+            print("Worse")
+        if self.goal_board == self.start_board:
+            print("=========================== GOAL!!! ==================")
+        # for a in range(2**p):
+        #     for b in range(2**p):
+        #             if s == 0:
+        #                     for i in range(y,len(self.start_board)-1):
+        #                         self.start_board[i][x],self.start_board[i+1][x] = self.start_board[i+1][x],self.start_board[i][x]#上方向にずらす
+        #             elif s == 1:
+        #                     for i in range(y,0,-1):
+        #                         self.start_board[i][x],self.start_board[i-1][x] = self.start_board[i-1][x],self.start_board[i][x]#下方向にずらす
+        #             elif s == 2:
+        #                     for i in range(x,len(self.start_board[0])-1):
+        #                         self.start_board[y][i],self.start_board[y][i+1] = self.start_board[y][i+1],self.start_board[y][i]#左方向にずらす
+        #             else:
+        #                     for i in range(x,0,-1):
+        #                         self.start_board[y][i],self.start_board[y][i-1] = self.start_board[y][i-1],self.start_board[y][i]#右方向にずらす
         self.op_idx += 1
 
 
     #一手戻る
     def apply_backward(self):
-        print(2)
-        print(self.op_idx)
+        p = self.answer["ops"][self.op_idx-1]["p"]
         x = self.answer["ops"][self.op_idx-1]["x"]
         y = self.answer["ops"][self.op_idx-1]["y"]
         s = self.answer["ops"][self.op_idx-1]["s"]
-        self.back(x,y,s)
+        self.back(x,y,s,p)
 
-    def back(self,x,y,s):
-        if s == 0:
-            for i in range(self.b_hei-1,y,-1):
-                self.start_board[i-1][x],self.start_board[i][x] = self.start_board[i][x],self.start_board[i-1][x]#上方向のずれを戻す
-        elif s == 1:
-            for i in range(0,y):
-                self.start_board[i][x],self.start_board[i+1][x] = self.start_board[i+1][x],self.start_board[i][x]#下方向のずれを戻す
+    def back(self,x,y,s,p):
+        if p in self.fixed_form_numbers :
+            for a in range(self.fixed_form_heights[p]):
+                for b in range(self.fixed_form_widths[p]):
+                    if self.fixed_form_cells[p][a][b] == 1:
+                        if s == 0:
+                            for i in range(self.b_hei-1,y,-1):
+                                self.start_board[i-1][x],self.start_board[i][x] = self.start_board[i][x],self.start_board[i-1][x]#上方向のずれを戻す
+                        elif s == 1:
+                            for i in range(0,y):
+                                self.start_board[i][x],self.start_board[i+1][x] = self.start_board[i+1][x],self.start_board[i][x]#下方向のずれを戻す
 
-        elif s == 2:
-            for i in range(self.b_wid-1,x,-1):
-                self.start_board[y][i],self.start_board[y][i-1] = self.start_board[y][i-1],self.start_board[y][i]#左方向のずれを戻す
+                        elif s == 2:
+                            for i in range(self.b_wid-1,x,-1):
+                                self.start_board[y][i],self.start_board[y][i-1] = self.start_board[y][i-1],self.start_board[y][i]#左方向のずれを戻す
 
+                        else:
+                            for i in range(0,x):
+                                self.start_board[y][i],self.start_board[y][i+1] = self.start_board[y][i+1],self.start_board[y][i]#右方向のずれを戻す
         else:
-            for i in range(0,x):
-                self.start_board[y][i],self.start_board[y][i+1] = self.start_board[y][i+1],self.start_board[y][i]#右方向のずれを戻す
+            for a in range(2**p):
+                for b in range(2**p):
+                    if s == 0:
+                        for i in range(self.b_hei-1,y,-1):
+                            self.start_board[i-1][x],self.start_board[i][x] = self.start_board[i][x],self.start_board[i-1][x]#上方向のずれを戻す
+                    elif s == 1:
+                        for i in range(0,y):
+                            self.start_board[i][x],self.start_board[i+1][x] = self.start_board[i+1][x],self.start_board[i][x]#下方向のずれを戻す
+
+                    elif s == 2:
+                        for i in range(self.b_wid-1,x,-1):
+                            self.start_board[y][i],self.start_board[y][i-1] = self.start_board[y][i-1],self.start_board[y][i]#左方向のずれを戻す
+
+                    else:
+                        for i in range(0,x):
+                            self.start_board[y][i],self.start_board[y][i+1] = self.start_board[y][i+1],self.start_board[y][i]#右方向のずれを戻す
         self.op_idx -= 1
 
     #タイマーを開始させる
@@ -519,3 +637,17 @@ class MainWidget(QWidget):
         self.timer.start()
     def button_push():
         print("pushed! button")
+
+    def resizeEvent(self,event):
+
+
+
+
+        self.glwidget.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
+        self.glwidget_goal.resize(int((self.width()*2/3)/2-40),int((self.width()*2/3)/2-40))
+
+        print(f"GLWidget Size: {self.glwidget.width()} x {self.glwidget.height()}")
+        print(f"GLgoalWidget Size {self.glwidget_goal.width()} x {self.glwidget_goal.height()}")
+        print(f" Widget Size: {self.width()} x {self.height()}")
+
+        super().resizeEvent(event)
