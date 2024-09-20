@@ -64,13 +64,13 @@ public:
 
     const std::vector<Action> &legalActions() const
     {
-        return this->_legalActions;
+        return *this->_legalActions;
     }
 
-    void calculateLegalActions(std::set<CellsType<int>> &excluded);
+    void calculateLegalActions(std::set<CellsType<int>> &excluded, bool onlyLR);
 
 private:
-    std::vector<Action> _legalActions;
+    const std::vector<Action> *_legalActions;
 };
 
 template<class CellValueType>
@@ -215,7 +215,7 @@ public:
 
     static std::shared_ptr<Problem> fromJson(std::istream &, bool calculateLegalAction = true);
 
-    void calculateLegalActions();
+    void calculateLegalActions(bool onlyLR = false);
 
     std::shared_ptr<Problem> crop(int x, int y, int width, int height) const;
 

@@ -63,17 +63,3 @@ public:
 
     int beamW, beamD;
 };
-
-class InboundChokudaiBeamSolver : public SolverBase
-{
-public:
-    InboundChokudaiBeamSolver(int width, int depth) :
-        beamW(width),
-        beamD(depth)
-    {
-    }
-
-    virtual std::vector<Action> solve(const Problem &prob);
-
-    int beamW, beamD;
-};

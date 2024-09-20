@@ -176,9 +176,9 @@ std::vector<Action> InboundBeamSolver::solve(const Problem &prob)
                 // 抜き型が有効なすべての位置を列挙する
                 auto acts = prob.stencils.at(it_p->first).legalActions();
                 for(auto it_act = acts.begin(); it_act != acts.end(); it_act++) {
-                    if(it_act->y < 0) {
-                        continue;
-                    }
+                    // if(it_act->y < 0) {
+                    //     continue;
+                    // }
 
                     // 行で揃えてるので左右の抜き型だけやる
                     if(it_act->s != StencilDirection::LEFT &&

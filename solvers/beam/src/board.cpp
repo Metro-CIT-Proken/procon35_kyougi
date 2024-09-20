@@ -78,15 +78,15 @@ void Problem::createDefaultStencils()
     }
 }
 
-void Stencil::calculateLegalActions(std::set<CellsType<int>> &excludedBoards)
+void Stencil::calculateLegalActions(std::set<CellsType<int>> &excludedBoards, bool onlyLR)
 {
     // 前に計算した合法手があればそれを使う
-    static std::map<std::tuple<int, int, int, int, bool>, std::vector<Action>> legalActionCache;
+    static std::map<std::tuple<int, int, int, int, bool, bool>, std::vector<Action>> legalActionCache;
     decltype(legalActionCache)::key_type cache_key = 
-        {problem->width, problem->height, problem->id, id, problem->oy != 0};
+        {problem->width, problem->height, problem->id, id, problem->oy != 0, onlyLR};
     if(legalActionCache.count(cache_key)) {
-        std::cout << "cached" << std::endl;
-        _legalActions = legalActionCache[cache_key];
+        std::cerr << "cached" << std::endl;
+        _legalActions = &legalActionCache[cache_key];
         return;
     }
 
@@ -99,39 +99,48 @@ void Stencil::calculateLegalActions(std::set<CellsType<int>> &excludedBoards)
     }
 
     excludedBoards.emplace(test_board.cells);
-    this->_legalActions.clear();
+    auto &legalActions = legalActionCache[cache_key];
+    _legalActions = &legalActions;
+
     // 問題がcropされていたらyを0から始める
     int y_start = problem->oy == 0 ?
         1 - this->height : 0;
     for(int y = y_start; y < this->problem->height; y++) {
         for(int x = 1 - this->width; x < this->problem->width; x++) {
-            const std::vector<StencilDirection> directs = {
-                StencilDirection::UP,
-                StencilDirection::DOWN,
-                StencilDirection::LEFT,
-                StencilDirection::RIGHT
-            };
+            std::vector<StencilDirection> directs;
+            if(onlyLR) {
+                directs = {
+                    StencilDirection::LEFT,
+                    StencilDirection::RIGHT
+                };
+            }
+            else {
+                directs = {
+                    StencilDirection::UP,
+                    StencilDirection::DOWN,
+                    StencilDirection::LEFT,
+                    StencilDirection::RIGHT
+                };
+            }
             for(const StencilDirection &s : directs) {
                 auto new_board = test_board;
                 new_board.advance(*this, x, y, s);
                 if(excludedBoards.count(new_board.cells) == 0) {
                     Action act{this->id, x, y, s};
                     excludedBoards.emplace(new_board.cells);
-                    this->_legalActions.emplace_back(act);
+                    legalActions.emplace_back(act);
                 }
             }
         }
     }
-
-    legalActionCache[cache_key] = _legalActions;
 }
 
-void Problem::calculateLegalActions() {
+void Problem::calculateLegalActions(bool onlyLR) {
     std::set<BoardBase<int>::CellsType> excludedBoards;
     std::cerr << "calculating legal boards..." << std::endl;
 
     for(auto it = stencils.begin(); it != stencils.end(); it++) {
-        it->second.calculateLegalActions(excludedBoards);
+        it->second.calculateLegalActions(excludedBoards, onlyLR);
         std::cerr << std::distance(stencils.begin(), it) << "/" << stencils.size() << std::endl;
     }
 }
