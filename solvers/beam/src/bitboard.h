@@ -4,7 +4,7 @@
 
 #include "board.h"
 
-using WordType = long long;
+using WordType = unsigned long long;
 constexpr int CELL_BITS = 2;
 constexpr int WORD_BITS = sizeof(WordType) * 8;
 
@@ -16,11 +16,30 @@ public:
     int xMin() const { return 1 - this->width; }
     int xMax() const { return this->prob->start.width; }
 
-    std::vector<std::vector<std::vector<WordType>>> cellsTable;
-    std::vector<std::vector<int>> oneBitsTable;
-    int width, height;
-    int id;
+    WordType &getWord(const int &apply_x, const int &y, const int &wi) {
+        return cellsTable[(apply_x - xMin()) * height * wordCount + y * wordCount + wi];
+    }
+
+    const WordType &getWord(const int &apply_x, const int &y, const int &wi) const {
+        return cellsTable[(apply_x - xMin()) * height * wordCount + y * wordCount + wi];
+    }
+
+    int &getOneBitsCount(const int &apply_x, const int &y) {
+        return oneBitsTable[(apply_x - xMin()) * height + y];
+    }
+
+    const int &getOneBitsCount(const int &apply_x, int const &y) const {
+        return oneBitsTable[(apply_x - xMin()) * height + y];
+    }
+
+    const int width, height;
+    const int id;
+    const int wordCount;
     const Problem *prob;
+
+private:
+    std::vector<WordType> cellsTable;
+    std::vector<int> oneBitsTable;
 };
 
 class Board_bitboard {
@@ -34,10 +53,20 @@ public:
     int getCell(int x, int y) const {
         int word_offset = (CELL_BITS * x) / WORD_BITS,
             word_rem    = (CELL_BITS * x) % WORD_BITS;
-        return (cells[y][word_offset] >> (WORD_BITS - CELL_BITS - word_rem)) & (((WordType)1 << CELL_BITS) - 1);
+        auto word = getWord(y, word_offset);
+        return (word >> (WORD_BITS - CELL_BITS - word_rem)) & (((WordType)1 << CELL_BITS) - 1);
     }
 
-    std::vector<std::vector<WordType>> cells;
+    WordType &getWord(const int &y, const int &wi) {
+        return cells[y * wordsPerLine + wi];
+    }
+
+    const WordType &getWord(const int &y, const int &wi) const {
+        return cells[y * wordsPerLine + wi];
+    }
+
+    const int wordsPerLine;
+    std::vector<WordType> cells;
 };
 
 // implement

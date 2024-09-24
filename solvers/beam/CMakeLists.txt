@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(solver CXX)
 enable_testing()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mbmi2 -std=c++23 -pg")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mbmi2 -mbmi -mabm -std=c++23 -O3 -save-temps")
 
 add_subdirectory(libs/json)
 add_subdirectory(libs/acutest)

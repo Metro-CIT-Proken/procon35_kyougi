@@ -51,7 +51,7 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
     using std::cout, std::cerr, std::endl;
 
     Problem_bitboard bprob(&prob);
-    std::priority_queue<BeamState, std::vector<BeamState>, BeamState::Comp> q, next_q;
+    std::priority_queue<BeamState> q, next_q;
     auto board_start = std::make_shared<Board_bitboard>(bprob.start);
     q.emplace(board_start, 0, 0, 0, 0, StencilDirection::UP, nullptr);
     int eval_max = -1;
@@ -143,7 +143,7 @@ std::vector<Action> InboundBeamSolver::solve(const Problem &prob)
     using std::cout, std::cerr, std::endl;
 
     Problem_bitboard bprob(&prob);
-    std::priority_queue<BeamState, std::vector<BeamState>, BeamState::Comp> q, next_q;
+    std::priority_queue<BeamState> q, next_q;
     auto board_start = std::make_shared<Board_bitboard>(bprob.start);
     q.emplace(board_start, 0, 0, 0, 0, StencilDirection::UP, nullptr);
     int eval_max = -1;
@@ -176,9 +176,9 @@ std::vector<Action> InboundBeamSolver::solve(const Problem &prob)
                 // 抜き型が有効なすべての位置を列挙する
                 auto acts = prob.stencils.at(it_p->first).legalActions();
                 for(auto it_act = acts.begin(); it_act != acts.end(); it_act++) {
-                    if(it_act->y < 0) {
-                        continue;
-                    }
+                    // if(it_act->y < 0) {
+                    //     continue;
+                    // }
 
                     // 行で揃えてるので左右の抜き型だけやる
                     if(it_act->s != StencilDirection::LEFT &&

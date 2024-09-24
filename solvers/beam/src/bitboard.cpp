@@ -1,7 +1,17 @@
 #include <bit>
 #include <x86intrin.h>
+#include <functional>
 
 #include "bitboard.h"
+
+static inline WordType left_shift(WordType x, int s) {
+    if(s >= 0) {
+        return x << s;
+    }
+    else {
+        return x >> -s;
+    }
+}
 
 Stencil_bitboard::Stencil_bitboard(const Stencil &stenc, const Problem *prob) :
     prob(prob), 
@@ -9,14 +19,13 @@ Stencil_bitboard::Stencil_bitboard(const Stencil &stenc, const Problem *prob) :
     height(stenc.height),
     cellsTable(),
     oneBitsTable(),
-    id(stenc.id)
+    id(stenc.id),
+    wordCount((prob->width * CELL_BITS + WORD_BITS - 1) / WORD_BITS)
 {
-    cellsTable.resize(xMax() - xMin(), std::vector<std::vector<WordType>>(
-        stenc.height, std::vector<WordType>((prob->width * CELL_BITS + WORD_BITS - 1) / WORD_BITS)));
-    oneBitsTable.resize(xMax() - xMin(), std::vector<int>(stenc.height));
+    cellsTable.resize((xMax() - xMin()) * height * wordCount);
+    oneBitsTable.resize((xMax() - xMin()) * height);
     
     for(int tx = xMin(); tx < xMax(); tx++) {
-        auto &cells = cellsTable[tx - xMin()];
         for(int y = 0; y < height; y++) {
             for(int x = 0; x < width; x++) {
                 int xoffset = x + tx;
@@ -27,27 +36,31 @@ Stencil_bitboard::Stencil_bitboard(const Stencil &stenc, const Problem *prob) :
                 }
                 int word_offset = (xoffset * CELL_BITS) / WORD_BITS,
                     word_rem    = (xoffset * CELL_BITS) % WORD_BITS;
-                cells[y][word_offset] 
-                    |= (stenc.cells[y][x] ? ((WordType)(1 << CELL_BITS) - 1) : 0) << (WORD_BITS - CELL_BITS - word_rem);
+                auto &word = getWord(tx, y, word_offset);
+                word |= (stenc.cells[y][x] ? ((WordType)(1 << CELL_BITS) - 1) : 0) << (WORD_BITS - CELL_BITS - word_rem);
             }
 
             int words_count = (prob->width * CELL_BITS + WORD_BITS - 1) / WORD_BITS;
             for(int i = 0; i < words_count; i++) {
-                oneBitsTable[tx - xMin()][y] += std::__popcount(cells[y][i]);
+                auto &oneBits = getOneBitsCount(tx, y);
+                auto &word = getWord(tx, y, i);
+                oneBits += std::popcount(word);
             }
         }
     }
 }
 
 Board_bitboard::Board_bitboard(const Board &board, const Problem *prob) :
-    cells(prob->height, std::vector<WordType>((prob->width * CELL_BITS + WORD_BITS - 1) / WORD_BITS))
+    wordsPerLine(((prob->width * CELL_BITS + WORD_BITS - 1) / WORD_BITS))
 {
+    cells.resize(prob->height * wordsPerLine);
+
     for(int y = 0; y < prob->height; y++) {
         for(int x = 0; x < prob->width; x++) {
             int word_offset = (x * CELL_BITS) / WORD_BITS,
                 word_rem    = (x * CELL_BITS) % WORD_BITS;
-            cells[y][word_offset] 
-                |= (WordType)board.cells[y][x] << (WORD_BITS - CELL_BITS - word_rem);
+            auto &word = getWord(y, word_offset);
+            word |= (WordType)board.cells[y][x] << (WORD_BITS - CELL_BITS - word_rem);
         }
     }
 }
@@ -58,8 +71,9 @@ Board Board_bitboard::toBoard(const Problem &prob) const {
         for(int x = 0; x < prob.width; x++) {
             int word_offset = (x * CELL_BITS) / WORD_BITS,
                 word_rem    = (x * CELL_BITS) % WORD_BITS;
+            auto &word = getWord(y, word_offset);
             board.cells[y][x] 
-                = (cells[y][word_offset] >> (WORD_BITS - CELL_BITS - word_rem)) & (((WordType)1 << CELL_BITS) - 1);
+                = (word >> (WORD_BITS - CELL_BITS - word_rem)) & (((WordType)1 << CELL_BITS) - 1);
         }
     }
 
@@ -70,33 +84,34 @@ void Board_bitboard::advance(const Stencil_bitboard &stenc, int x, int y, int s)
     int y_start = std::max(0, y),
         y_end   = std::min(stenc.prob->height, y + stenc.height);
     for(int yi = y_start; yi < y_end; yi++) {
-        const auto &stenc_mask = stenc.cellsTable[x - stenc.xMin()][yi - y];
         int words_count = (stenc.prob->width * CELL_BITS + WORD_BITS - 1) / WORD_BITS;
         int left_pos = 0,
             right_pos = 0;
+        int one_bits = stenc.getOneBitsCount(x, yi - y);
         if(s == 2) {
             left_pos = 0,
-            right_pos = CELL_BITS * stenc.prob->width - stenc.oneBitsTable[x - stenc.xMin()][yi - y];
+            right_pos = CELL_BITS * stenc.prob->width - one_bits;
         }
         else if(s == 3) {
             left_pos = 0,
-            right_pos = stenc.oneBitsTable[x - stenc.xMin()][yi - y];
+            right_pos = one_bits;
         }
-        std::vector<WordType> result(words_count);
+
+        std::array<WordType, 8> result = {};
         for(int i = 0; i < words_count; i++) {
             int mask_rem = std::min(WORD_BITS, stenc.prob->width * CELL_BITS - WORD_BITS * (i + 1));
-            WordType mask = stenc_mask[i];
+            WordType mask = stenc.getWord(x, yi - y, i);
             WordType reversed_mask = ~mask & ((~(WordType)0) << (WORD_BITS - mask_rem));
 
             if(s == 2) {
-                WordType left  = _pext_u64(cells[yi][i], reversed_mask);
-                WordType right = _pext_u64(cells[yi][i], mask);
-                int left_bits  = std::__popcount(reversed_mask),
-                    right_bits = std::__popcount(mask);
+                WordType left  = _pext_u64(getWord(yi, i), reversed_mask);
+                WordType right = _pext_u64(getWord(yi, i), mask);
+                int left_bits  = std::popcount(reversed_mask),
+                    right_bits = std::popcount(mask);
 
                 int left_word_offset = left_pos / WORD_BITS,
                     left_word_rem    = left_pos % WORD_BITS;
-                result[left_word_offset] |= left << (WORD_BITS - left_bits - left_word_rem);
+                result[left_word_offset] |= left_shift(left, (WORD_BITS - left_bits - left_word_rem));
                 if((left_pos + left_bits - 1) / WORD_BITS != left_pos / WORD_BITS) {
                     result[left_word_offset + 1] 
                         |= left << (WORD_BITS - left_bits - left_word_rem + WORD_BITS);
@@ -105,7 +120,7 @@ void Board_bitboard::advance(const Stencil_bitboard &stenc, int x, int y, int s)
 
                 int right_word_offset = right_pos / WORD_BITS,
                     right_word_rem    = right_pos % WORD_BITS;
-                result[right_word_offset] |= right << (WORD_BITS - right_bits - right_word_rem);
+                result[right_word_offset] |= left_shift(right, (WORD_BITS - right_bits - right_word_rem));
                 if((right_pos + right_bits - 1) / WORD_BITS != right_pos / WORD_BITS) {
                     result[right_word_offset + 1]
                         |= right << (WORD_BITS - right_bits - right_word_rem + WORD_BITS);
@@ -113,14 +128,14 @@ void Board_bitboard::advance(const Stencil_bitboard &stenc, int x, int y, int s)
                 right_pos += right_bits;
             }
             else if(s == 3) {
-                WordType left  = _pext_u64(cells[yi][i], mask);
-                WordType right = _pext_u64(cells[yi][i], reversed_mask);
-                int left_bits  = std::__popcount(mask),
-                    right_bits = std::__popcount(reversed_mask);
+                WordType left  = _pext_u64(getWord(yi, i), mask);
+                WordType right = _pext_u64(getWord(yi, i), reversed_mask);
+                int left_bits  = std::popcount(mask),
+                    right_bits = std::popcount(reversed_mask);
                 
                 int left_word_offset = left_pos / WORD_BITS,
                     left_word_rem    = left_pos % WORD_BITS;
-                result[left_word_offset] |= left << (WORD_BITS - left_bits - left_word_rem);
+                result[left_word_offset] |= left_shift(left, (WORD_BITS - left_bits - left_word_rem));
                 if((left_pos + left_bits - 1) / WORD_BITS != left_pos / WORD_BITS) {
                     result[left_word_offset + 1] 
                         |= left << (WORD_BITS - left_bits - left_word_rem + WORD_BITS);
@@ -129,7 +144,7 @@ void Board_bitboard::advance(const Stencil_bitboard &stenc, int x, int y, int s)
 
                 int right_word_offset = right_pos / WORD_BITS,
                     right_word_rem    = right_pos % WORD_BITS;
-                result[right_word_offset] |= right << (WORD_BITS - right_bits - right_word_rem);
+                result[right_word_offset] |= left_shift(right, (WORD_BITS - right_bits - right_word_rem));
                 if((right_pos + right_bits - 1) / WORD_BITS != right_pos / WORD_BITS) {
                     result[right_word_offset + 1]
                         |= right << (WORD_BITS - right_bits - right_word_rem + WORD_BITS);
@@ -137,8 +152,8 @@ void Board_bitboard::advance(const Stencil_bitboard &stenc, int x, int y, int s)
                 right_pos += right_bits;
             }
         }
-
-        cells[yi].swap(result);
+        
+        std::copy(result.begin(), result.begin() + words_count, &getWord(yi, 0));
     }
 }
 

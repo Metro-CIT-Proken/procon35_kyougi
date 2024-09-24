@@ -5,6 +5,7 @@
 #include <map>
 #include <iostream>
 #include <set>
+#include <memory>
 
 template<typename CellValueType>
 using CellsType = std::vector<std::vector<CellValueType>>;
@@ -27,7 +28,7 @@ public:
     Stencil(int id, const CellsType<char> &cells, const Problem *prob) : 
         id(id), 
         height(cells.size()),
-        width(height == 0 ? 0 : cells[0].size()), 
+        width(cells.size() == 0 ? 0 : cells[0].size()), 
         cells(cells), 
         problem(prob)
     {
@@ -63,13 +64,13 @@ public:
 
     const std::vector<Action> &legalActions() const
     {
-        return this->_legalActions;
+        return *this->_legalActions;
     }
 
-    void calculateLegalActions(std::set<CellsType<int>> &excluded);
+    void calculateLegalActions(std::set<CellsType<int>> &excluded, bool onlyLR);
 
 private:
-    std::vector<Action> _legalActions;
+    const std::vector<Action> *_legalActions;
 };
 
 template<class CellValueType>
@@ -81,7 +82,7 @@ public:
     BoardBase(int w, int h) : 
         width(w), 
         height(h), 
-        cells(height, std::vector<CellValueType>(w))
+        cells(h, std::vector<CellValueType>(w))
     {
     }
 
@@ -204,19 +205,23 @@ public:
         oy(0)
     {
         createDefaultStencils();
+
+        static int nextProblemId;
+        id = nextProblemId;
+        nextProblemId++;
     }
 
     void createDefaultStencils();
 
-    static Problem fromJson(std::istream &);
+    static std::shared_ptr<Problem> fromJson(std::istream &, bool calculateLegalAction = true);
 
-    void calculateLegalActions();
+    void calculateLegalActions(bool onlyLR = false);
 
-    Problem apply(std::vector<Action> acts) const;
-    Problem crop(int x, int y, int width, int height) const;
+    std::shared_ptr<Problem> crop(int x, int y, int width, int height) const;
 
     Board start, goal;
     int width, height;
     int ox, oy;
     std::map<int, Stencil> stencils;
+    int id;
 };
