@@ -12,6 +12,7 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from scroll_widget import *
 
+import numpy
 from termcolor import colored
 
 
@@ -39,7 +40,8 @@ class MainWidget(QWidget):
         self.fixed_form_numbers = [ self.problem['general']['patterns'][x]['p'] for x in range(self.fixed_form_num)]
         self.fixed_form_widths = { self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['width'] for x in range(self.fixed_form_num)}
         self.fixed_form_heights = {self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['height'] for x in range(self.fixed_form_num)}
-        self.fixed_form_cells = {self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['cells'] for x in range(self.fixed_form_num)}
+        self.fixed_form_cells = {self.fixed_form_numbers[x] : [ [self.problem['general']['patterns'][x]['cells'][i][j] for j in range(len(self.problem['general']['patterns'][x]['cells'][i]))]for i in range(len(self.problem['general']['patterns'][x]['cells'])) ]  for x in range(self.fixed_form_num)}
+        print(f"fixed_form_cells types: {type(self.fixed_form_cells)}")
         print(f"numbers: {self.fixed_form_numbers}")
         print(f"widths: {self.fixed_form_widths}")
         print(f'heights: {self.fixed_form_heights}')
@@ -498,6 +500,9 @@ class MainWidget(QWidget):
         p = self.answer["ops"][self.op_idx]["p"]
         if p in self.fixed_form_numbers:
             cells = self.fixed_form_cells[p]
+            print(f"tokusyucells:{cells}")
+            print(f"typetokusyucells:{type(cells)}")
+            cell_size
         else:
             if p == 0:
                 cell_type = 1
@@ -520,7 +525,7 @@ class MainWidget(QWidget):
                             cells[i][j] = 1
 
 
-        pre_start = [[ self.start_board[i][j]  for j in range(0,len(self.start_board[i]))] for i in range(0,len(self.start_board[j]))]
+        pre_start = [[ self.start_board[i][j]  for j in range(0,len(self.start_board[i]))] for i in range(0,len(self.start_board))]
 
 
 
@@ -563,49 +568,119 @@ class MainWidget(QWidget):
 
 
     def move(self,x,y,s,cells):#ボードを変更する
-        one_count = -1
+        # one_count = -1
         count = 0
+        first_board = []
         if s == 0:
             for a in range(len(cells[0])):
-                one_count = -1
+                # one_count = -1
+                if  not(x + a < 0  or x+a >= len(self.start_board[0])) :#抜き型が場外
+                    first_board = [row[x+a] for row in self.start_board]
                 for b in range(len(cells)):
                     count+=1
                     print(f"a: {a},b: {b}")
                     if cells[b][a] == 1:
-                        one_count+=1
-                        print(f"one_count: {one_count}")
-                        self.basic_move(x,y,s,a,b,cells,one_count)
+                        # one_count+=1
+                        # print(f"one_count: {one_count}")
+                        if not(y + b < 0 or x + a < 0 or y+b >= len(self.start_board) or x+a >= len(self.start_board[0])):
+                            self.basic_move(x,y,s,a,b,cells)
+
+                if  not(x + a < 0  or x+a >= len(self.start_board[0])) :#抜き型が場外
+                    print(f"{self.op_idx}手目")
+                    print(f"x:{x}")
+                    print(f"y:{y}")
+                    print(f"s:{s}")
+                    print(f"cells:")
+                    for i in range(len(cells)):
+                        print(cells[i])
+                    print(f"{a}列目")
+                    print("手最初")
+                    print(first_board)
+                    print("手最後")
+                    print([row[x+a] for row in self.start_board])
 
         elif s == 1:
             for a in range(len(cells[0])):
-                one_count = -1
+                # one_count = -1
+                if  not(x + a < 0  or x+a >= len(self.start_board[0])) :#抜き型が場外
+                    first_board = [row[x+a] for row in self.start_board]
                 for b in range(len(cells)-1,-1,-1):
                     count+=1
                     print(f"a: {a},b: {b}")
                     if cells[b][a] == 1:
-                        one_count+=1
-                        print(f"one_count: {one_count}")
-                        self.basic_move(x,y,s,a,b,cells,one_count)
+                        # one_count+=1
+                        # print(f"one_count: {one_count}")
+                        if not(y + b < 0 or x + a < 0 or y+b >= len(self.start_board) or x+a >= len(self.start_board[0])):
+                            self.basic_move(x,y,s,a,b,cells)
+
+                if  not(x + a < 0  or x+a >= len(self.start_board[0])) :#抜き型が場外
+                    print(f"{self.op_idx}手目")
+                    print(f"x:{x}")
+                    print(f"y:{y}")
+                    print(f"s:{s}")
+                    print(f"cells:")
+                    for i in range(len(cells)):
+                        print(cells[i])
+                    print(f"{a}列目")
+                    print("手最初")
+                    print(first_board)
+                    print("手最後")
+                    print([row[x+a] for row in self.start_board])
         elif s == 2:
             for a in range(len(cells)):
-                one_count = -1
+                # one_count = -1
+                if not(  y + a < 0  or y+a >= len(self.start_board))  :#抜き型が場外
+                    first_board = [i for i in self.start_board[y+a]]
                 for b in range(len(cells[0])):
                     count+=1
                     print(f"a: {a},b: {b}")
                     if cells[a][b] == 1:
-                        one_count+=1
-                        print(f"one_count: {one_count}")
-                        self.basic_move(x,y,s,a,b,cells,one_count)
+                        # one_count+=1
+                        # print(f"one_count: {one_count}")
+                        if  not(y + a < 0 or x + b < 0 or y+a >= len(self.start_board) or x+b >= len(self.start_board[0])):#抜き型が場外
+                            self.basic_move(x,y,s,a,b,cells)
+
+                if not(  y + a < 0  or y+a >= len(self.start_board))  :#抜き型が場外
+                    print(f"{self.op_idx}手目")
+                    print(f"x:{x}")
+                    print(f"y:{y}")
+                    print(f"s:{s}")
+                    print(f"cells:")
+                    for i in range(len(cells)):
+                        print(cells[i])
+                    print(f"{a}行目")
+                    print("手最初")
+                    print(first_board)
+                    print("手最終")
+                    print(self.start_board[y+a])
+
         elif s == 3:
             for a in range(len(cells)):
-                one_count= -1
+                # one_count= -1
+                if  not(y + a < 0  or y+a >= len(self.start_board))  :#抜き型が場外
+                    first_board = [i for i in self.start_board[y+a]]
                 for b in range(len(cells[0])-1,-1,-1):
                     count+=1
                     print(f"a: {a},b: {b}")
-                    if cells[a][b]:
-                        one_count += 1
-                        print(f"one_count: {one_count}")
-                        self.basic_move(x,y,s,a,b,cells,one_count)
+                    if cells[a][b] == 1:
+                        if  not(y + a < 0 or x + b < 0 or y+a >= len(self.start_board) or x+b >= len(self.start_board[0])):#抜き型が場外
+                        # one_count += 1
+                        # print(f"one_count: {one_count}")
+                            self.basic_move(x,y,s,a,b,cells)
+
+                if  not(y + a < 0  or y+a >= len(self.start_board))  :#抜き型が場外
+                    print(f"{self.op_idx}手目")
+                    print(f"x:{x}")
+                    print(f"y:{y}")
+                    print(f"s:{s}")
+                    print(f"cells:")
+                    for i in range(len(cells)):
+                        print(cells[i])
+                    print(f"{a}行目")
+                    print("手最初")
+                    print(first_board)
+                    print("手最終")
+                    print(self.start_board[y+a])
         print(count)
 
         if self.goal_board == self.start_board:
@@ -627,54 +702,81 @@ class MainWidget(QWidget):
         self.op_idx += 1
 
 
-    def basic_move(self,x,y,s,a,b,cells,one_count):
-        print("basic_move")
-        if  y + a < 0 or x + b < 0 or y+a >= len(self.start_board) or x+b >= len(self.start_board[0]) and (s==2 or s==3):
-            return
-        elif y + b < 0 or x + a < 0 or y+b >= len(self.start_board) or x+a >= len(self.start_board[0]) and (s==1 or s==0):
-            return
+    def basic_move(self,x,y,s,a,b,cells):
+            print("basic_move")
+        # if s == 2 and s == 3:
+        #     if  y + a < 0 or x + b < 0 or y+a >= len(self.start_board) or x+b >= len(self.start_board[0]):#抜き型が場外
+        #         print("out")
+        #         return
+        # if s == 0 and s==1:
+        #     if y + b < 0 or x + a < 0 or y+b >= len(self.start_board) or x+a >= len(self.start_board[0]):#抜き型が場外
+        #         print("out")
+        #         return
 
 
-        else:
+
             true_count = 0
             remove = 0
-            pre_x = -1
+            pre_x = -1 #座標を保存するための変数
             pre_y = -1
+            first_board = []
 
             if s == 0:
-                for i in range(y+b,len(self.start_board)-1-one_count):
+                first_board = [row[x+a] for row in self.start_board]
+                print("最初")
+                print(first_board)
+                for i in range(y+b,len(self.start_board)-1):#動かそうとしているますの座標〜下端
                     # print(f"s:{s} i:{i} remove:{remove}")
-
-                    if i-y+1 > 0 and i-y+1 < len(cells):
+                    print(f"i: {i}")
+                    if i-y+1 >= 0 and i-y+1 < len(cells):
                         if cells[i-y+1][a] == 1:
                             print(f"i-y+1: {i-y+1}")
                             # remove+=1
                             if pre_y == -1:
-                                pre_y = i
+                                pre_y = i #前に動かす予定のますがあったら移動しない今動かそうとしているますの座標を保存する
                                 print(f"s:{s} i:{i} pre_x: {pre_x} pre_y: {pre_y}")
 
 
                         else:
                             # self.start_board[i][x+a],self.start_board[i+1+remove][x+a] = self.start_board[i+1+remove][x+a],self.start_board[i][x+a]#上方向にずらす
                             if pre_y != -1:
-                                self.start_board[pre_y][x+a],self.start_board[i+1][x+a] = self.start_board[i+1][x+a],self.start_board[pre_y][x+a]#上方向にずらす
+                                self.start_board[pre_y][x+a],self.start_board[i+1][x+a] = self.start_board[i+1][x+a],self.start_board[pre_y][x+a]#上方向にずらす#保存していた座標と交換する
+                                print(f"move_pre!: {pre_y}, {i+1}")
+                                print([row[x+a] for row in self.start_board])
                                 pre_y = -1
                             else:
-                                pre_y = -1
-                                self.start_board[i][x+a],self.start_board[i+1][x+a] = self.start_board[i+1][x+a],self.start_board[i][x+a]#上方向にずらす
+                                # pre_y = -1
+                                self.start_board[i][x+a],self.start_board[i+1][x+a] = self.start_board[i+1][x+a],self.start_board[i][x+a]#上方向にずらす#座標が保存されず抜き型内で移動をする場合
+                                print(f"move_in!")
+                                print([row[x+a] for row in self.start_board])
                             # remove = 0
-                        continue
                     # remove = 0
-                    pre_y = -1
-                    self.start_board[i][x+a],self.start_board[i+1][x+a] = self.start_board[i+1][x+a],self.start_board[i][x+a]#上方向にずらす
+                    # pre_y = -1
+                    else:
+                        if pre_y != -1:
+                            self.start_board[pre_y][x+a],self.start_board[i+1][x+a] = self.start_board[i+1][x+a],self.start_board[pre_y][x+a]#上方向にずらす#保存していた座標と交換する
+                            print(f"move_in_pre!: {pre_y}, {i+1}")
+                            print([row[x+a] for row in self.start_board])
+                            pre_y = -1
+
+                        else:
+                            self.start_board[i][x+a],self.start_board[i+1][x+a] = self.start_board[i+1][x+a],self.start_board[i][x+a]#上方向にずらす#抜き型外で移動を行う場合い
+                            print([row[x+a] for row in self.start_board])
+                            print(f"move!")
+                print("最初")
+                print(first_board)
+                print("最終")
+                print([row[x+a] for row in self.start_board])
 
             elif s == 1:
-                for i in range(y+b,one_count,-1):
 
+                first_board = [row[x+a] for row in self.start_board]
+                print("最初")
+                print(first_board)
+                for i in range(y+b,0,-1):
+                    print(f"i: {i}")
                     # print(f"s:{s} i:{i} remove:{remove}")
-
-
-                    if i-y-1 > 0 and i-y-1 < len(cells):
+                    if i-y-1 >= 0 and i-y-1 < len(cells):
                         if cells[i-y-1][a] == 1:
                             print(f"i-y-1: {i-y-1}")
                             if pre_y == -1:
@@ -685,23 +787,40 @@ class MainWidget(QWidget):
                             # self.start_board[i][x+a],self.start_board[i-1+remove][x+a] = self.start_board[i-1+remove][x+a],self.start_board[i][x+a]
                             if pre_y != -1:
                                 self.start_board[i-1][x+a],self.start_board[pre_y][x+a] = self.start_board[pre_y][x+a],self.start_board[i-1][x+a]
+                                print(f"move_pre!: {pre_y}, {i-1}")
+                                print([row[x+a] for row in self.start_board])
                                 pre_y = -1
                             else:
-                                pre_y = -1
+                                # pre_y = -1
                                 self.start_board[i][x+a],self.start_board[i-1][x+a] = self.start_board[i-1][x+a],self.start_board[i][x+a]
+                                print("move!_in")
+                                print([row[x+a] for row in self.start_board])
                             # remove = 0
-                        continue
+                    else:
                     #下方向にずらす
                     # remove = 0
-                    pre_y = -1
-                    self.start_board[i][x+a],self.start_board[i-1][x+a] = self.start_board[i-1][x+a],self.start_board[i][x+a]
+                    # pre_y = -1
+                        if pre_y != -1:
+                            self.start_board[i-1][x+a],self.start_board[pre_y][x+a] = self.start_board[pre_y][x+a],self.start_board[i-1][x+a]
+                            (f"move_pre_in!: {pre_y}, {i-1}")
+                            pre_y = -1
+                            print([row[x+a] for row in self.start_board])
+                        else:
+                            self.start_board[i][x+a],self.start_board[i-1][x+a] = self.start_board[i-1][x+a],self.start_board[i][x+a]
+                            print("move!")
+                            print([row[x+a] for row in self.start_board])
+                print("最初")
+                print(first_board)
+                print("最終")
+                print([row[x+a] for row in self.start_board])
 
             elif s == 2:
-                for i in range(x+b,len(self.start_board[0])-1-one_count):
-                    # print(f"s:{s} i:{i} remove: {remove}")
-
-
-                    if i-x+1 > 0 and i-x+1 < len(cells[0]):
+                first_board = [i for i in self.start_board[y+a]]
+                print("最初")
+                print(first_board)
+                for i in range(x+b,len(self.start_board[0])-1):
+                    print(f"i: {i}")
+                    if i-x+1 >= 0 and i-x+1 < len(cells[0]):
                         if cells[a][i-x+1] == 1:
                             print(f"i-x+1: {i-x+1}")
                             # remove += 1
@@ -713,18 +832,40 @@ class MainWidget(QWidget):
                             # remove = 0
                             if pre_x != -1:
                                 self.start_board[y+a][pre_x],self.start_board[y+a][i+1] = self.start_board[y+a][i+1],self.start_board[y+a][pre_x]#左方向にずらす
+                                print(f"move_pre!: {pre_x} {i+1}")
+                                print(self.start_board[y+a])
                                 pre_x = -1
+
                             else:
+                                # pre_x = -1
                                 self.start_board[y+a][i],self.start_board[y+a][i+1] = self.start_board[y+a][i+1],self.start_board[y+a][i]#左方向にずらす
-                        continue
+                                print("move_in!")
+                                print(self.start_board[y+a])
+                    else:
                     # remove = 0
-                    pre_x = -1
-                    self.start_board[y+a][i],self.start_board[y+a][i+1] = self.start_board[y+a][i+1],self.start_board[y+a][i]#左方向にずらす
+                    # pre_x = -1
+                        if  pre_x != -1:
+                            self.start_board[y+a][pre_x],self.start_board[y+a][i+1] = self.start_board[y+a][i+1],self.start_board[y+a][pre_x]
+                            print(f"move_pre_in!: {pre_x} {i+1}")
+                            print(self.start_board[y+a])
+                            pre_x = -1
+                        else:
+                            self.start_board[y+a][i],self.start_board[y+a][i+1] = self.start_board[y+a][i+1],self.start_board[y+a][i]#左方向にずらす
+                            print(self.start_board[y+a])
+                        print("move!")
+                print("最初")
+                print(first_board)
+                print("最終")
+                print(self.start_board[y+a])
 
             elif s == 3:
-                for i in range(x+b,one_count,-1):
+                first_board = [i for i in self.start_board[y+a]]
+                print("最初")
+                print(first_board)
+                for i in range(x+b,0,-1):
+                    print(f"i: {i}")
                     # print(f"s:{s} i:{i} remove: {remove}")
-                    if i-x-1 > 0 and i-x-1 < len(cells[0]):
+                    if i-x-1 >= 0 and i-x-1 < len(cells[0]):
                         if cells[a][i-x-1] == 1:
                             print(f"i-x-1: {i-x-1}")
                             # remove -= 1
@@ -734,18 +875,34 @@ class MainWidget(QWidget):
                         else:
                             # self.start_board[y+a][i],self.start_board[y+a][i-1+remove] = self.start_board[y+a][i-1+remove],self.start_board[y+a][i]
                             # remove = 0
-                            if pre_x != 1:
+                            if pre_x != -1:
                                 self.start_board[y+a][pre_x],self.start_board[y+a][i-1] = self.start_board[y+a][i-1],self.start_board[y+a][pre_x]
+                                print(f"move_pre!: {pre_x} {i-1}")
+                                print(self.start_board[y+a])
                                 pre_x = -1
                             else:
-                                pre_x = -1
+                                # pre_x = -1
                                 self.start_board[y+a][i],self.start_board[y+a][i-1] = self.start_board[y+a][i-1],self.start_board[y+a][i]#右方向にずらす
+                                print("move_in!")
+                                print(self.start_board[y+a])
 
-                        continue
+                    else:
                     # remove = 0
-                    pre_x = -1
-                    self.start_board[y+a][i],self.start_board[y+a][i-1] = self.start_board[y+a][i-1],self.start_board[y+a][i]#右方向にずらす
+                    # pre_x = -1
+                        if pre_x != -1:
+                            self.start_board[y+a][pre_x],self.start_board[y+a][i-1] = self.start_board[y+a][i-1],self.start_board[y+a][pre_x]
+                            print(f"move_pre_in!: {pre_x} {i-1}")
+                            print(self.start_board[y+a])
+                            pre_x = -1
 
+                        else:
+                            self.start_board[y+a][i],self.start_board[y+a][i-1] = self.start_board[y+a][i-1],self.start_board[y+a][i]#右方向にずらす
+                            print("move!")
+                            print(self.start_board[y+a])
+                print("最初")
+                print(first_board)
+                print("最終")
+                print(self.start_board[y+a])
 
 
     #一手戻る
