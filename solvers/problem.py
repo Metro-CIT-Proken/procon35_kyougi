@@ -50,28 +50,28 @@ class Stencil:
         py_end = min(self.height, board.height - y)
         if s == Stencil.StencilDirection.UP:
             for tx in range(x_start, x_end):
-                cond = np.zeros((board.height), dtype=np.bool)
+                cond = np.zeros((board.height), dtype=bool)
                 cond[y_start:y_end] = self.cells[py_start:py_end, tx - x]
                 pushed_cells = np.extract(~cond, board.board[:, tx])
                 float_cells = np.extract(cond, board.board[:, tx])
                 new_board.board[:, tx] = np.concatenate((pushed_cells, float_cells))
         elif s == Stencil.StencilDirection.DOWN:
             for tx in range(x_start, x_end):
-                cond = np.zeros((board.height), dtype=np.bool)
+                cond = np.zeros((board.height), dtype=bool)
                 cond[y_start:y_end] = self.cells[py_start:py_end, tx - x]
                 pushed_cells = np.extract(~cond, board.board[:, tx])
                 float_cells = np.extract(cond, board.board[:, tx])
                 new_board.board[:, tx] = np.concatenate((float_cells, pushed_cells))
         elif s == Stencil.StencilDirection.LEFT:
             for ty in range(y_start, y_end):
-                cond = np.zeros((board.width), dtype=np.bool)
+                cond = np.zeros((board.width), dtype=bool)
                 cond[x_start:x_end] = self.cells[ty - y, px_start:px_end]
                 pushed_cells = np.extract(~cond, board.board[ty, :])
                 float_cells = np.extract(cond, board.board[ty, :])
                 new_board.board[ty, :] = np.concatenate((pushed_cells, float_cells))
         elif s == Stencil.StencilDirection.RIGHT:
             for ty in range(y_start, y_end):
-                cond = np.zeros((board.width), dtype=np.bool)
+                cond = np.zeros((board.width), dtype=bool)
                 cond[x_start:x_end] = self.cells[ty - y, px_start:px_end]
                 pushed_cells = np.extract(~cond, board.board[ty, :])
                 float_cells = np.extract(cond, board.board[ty, :])
