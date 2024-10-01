@@ -503,7 +503,11 @@ class MainWidget(QWidget):
         cell_type = 0
         cell_size = 0
         if p in self.fixed_form_numbers:
-            cells = self.fixed_form_cells[p]
+            try:
+                cells = [[ int(self.fixed_form_cells[p][i][j])for j in range(len(self.fixed_form_cells[p][i]))] for i in range(len(self.fixed_form_cells[p]))]
+            except TypeError:
+                print("無効な要素が入っています")
+                return 0
             print(f"tokusyucells:{cells}")
             print(f"typetokusyucells:{type(cells)}")
             cell_size

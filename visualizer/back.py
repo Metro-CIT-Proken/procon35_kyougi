@@ -42,6 +42,7 @@ class Back():
             for j in range(x,x+len(cells[0])):
                 print(f"j:{j}")
                 counts = one_counts[j]
+                first_board = [[self.start_board[b][a] for a in range(len(self.start_board[b])) if a == j] for b in range(len(self.start_board))]
                 # first_board = [row[j] for row in self.start_board]
                 for i in range(y,y+len(cells)):
                     print(f"j:{j} i:{i}")
@@ -58,9 +59,9 @@ class Back():
             for j in range(x,x+len(cells[0])):
                 print(f"i:{i}")
                 counts = one_counts[j]
-                first_board = [row[i][j] for row in self.start_board]
+                first_board = [[self.start_board[b][a] for a in range(len(self.start_board[b])) if a == j] for b in range(len(self.start_board))]
                 # if j in one_counts:
-                for i in range(y+len(cells),y,-1):
+                for i in range(y+len(cells)-1,y-1,-1):
                     print(f"j:{j} i:{i}")
                     if i >= 0 and j >= 0 and i < len(self.start_board) and j < len(self.start_board[0]):
                         if i-y >= 0 and j-x >= 0 and i-y < len(cells) and j-x < len(cells[0]):
@@ -143,9 +144,17 @@ class Back():
             print()
             for j in range(len(pre_start[0])):
                 if (i >= y and j >= x) and (i < y+len(cells) and j < x+len(cells[0])):
-                    print(colored(str(pre_start[i][j])+'*', "red"),end=" ")
+                    if s == 0 or s == 1:
+                        print(colored(str(pre_start[i][j])+'*', "red"))
+                        print()
+                    else:
+                        print(colored(str(pre_start[i][j])+'*', "red"),end=" ")
                 else:
-                    print(str(pre_start[i][j])+'+',end=" ")
+                    if s == 0 or s == 1:
+                        print(str(pre_start[i][j])+'+')
+                        print()
+                    else:
+                        print(str(pre_start[i][j])+'+',end=" ")
         print()
         print("変更後")
         for i in range(len(self.start_board)):
@@ -173,7 +182,7 @@ class Back():
                 print(f"move!:  {self.start_board[i]}")
         elif s== 1:
             print(f"start: {len(self.start_board)-1+counts} end: {i-1}")
-            for a in range(counts-1,i-1):
+            for a in range(counts-1,i):
                 self.start_board[a][j],self.start_board[a+1][j] = self.start_board[a+1][j],self.start_board[a][j]
                 print(f"move!:  {self.start_board[i]}")
         elif s == 2:
