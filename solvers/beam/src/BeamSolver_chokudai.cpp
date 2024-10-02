@@ -1,6 +1,8 @@
 #include <memory>
 #include <iostream>
 #include <queue>
+#include <array>
+#include <unordered_set>
 
 #include <x86intrin.h>
 
@@ -19,7 +21,8 @@ std::vector<WordType> evaluateMask = {
 
 static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &board)
 {
-    int eval = 0;
+    int eval_r = 0,
+        eval_l = 0;
     bool end = false;
     for(int y = 0; y < prob.prob->height; y++) {
         // for(int w = 0; w < board.wordsPerLine; w++) {
@@ -42,29 +45,61 @@ static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &boa
         //     eval += 1000 * (WORD_BITS / CELL_BITS);
         // }
 
+
+
         for(int x = 0; x < prob.prob->width; x++) {
             if(board.getCell(x, y) != prob.goal.getCell(x, y)) {
                 int tx = x;
                 int c = prob.goal.getCell(x, y);
                 while(++x <= prob.prob->width) {
                     if(c == board.getCell(x, y)) {
-                        eval += prob.prob->width - (x - tx);
+                        eval_r += prob.prob->width - (x - tx);
                         break;
                     }
                 }
 
+                // int dsum = 0;
+                // for(int tx = x + 1; tx < prob.width; tx++) {
+                //     int c = prob.goal.getCell(tx, y);
+                //     for(int sx = tx + 1; sx < prob.width; sx++) {
+                //         if(board.getCell(sx, y) == c) {
+                //             dsum += sx - tx;
+                //             break;
+                //         }
+                //     }
+                // }
+
+                // eval_r -= dsum / (prob.width - x);
+
                 end = true;
                 break;
             }
-            eval += 1000;
+            eval_r += 1000;
         }
+
+        // {
+        //     int sum_diff = 0;
+        //     std::array<int, 4> x_start = {};
+        //     for(int x = 0; x < prob.width; x++) {
+        //         int c = board.getCell(x, y);
+        //         for(int sx = x_start[c]; sx < prob.width; sx++) {
+        //             if(prob.goal.getCell(sx, y) == c) {
+        //                 sum_diff += std::abs(sx - x);
+        //                 x_start[c] = sx + 1;
+        //                 break;
+        //             }
+        //         }
+        //     }
+
+        //     eval_r += sum_diff;
+        // }
 
         // if(end) {
         //     break;
         // }
     }
 
-    return eval;
+    return eval_r;
 }
 
 std::vector<Action> ChokudaiBeamSolver::solve(const Problem &prob_normal)
@@ -130,6 +165,7 @@ std::vector<Action> ChokudaiBeamSolver::solve(const Problem &prob_normal)
                         // 盤面をコピーして、次の盤面を生成する
                         auto new_board = std::make_shared<Board_bitboard>(*now_state->board);
                         new_board->advance(prob.stencils.at(it_act->p), it_act->x, it_act->y, it_act->s);
+
                         int eval = evaluateBoard(prob, *new_board);
                         BeamState new_state(nullptr, eval, it_p->first, it_act->x, it_act->y, it_act->s, now_state);
 

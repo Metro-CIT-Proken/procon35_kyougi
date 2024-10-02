@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     std::ifstream f(argv[1]);
     auto prob = Problem::fromJson(f, false);
 
-    VDivideSolver solver(512);
+    VDivideSolver solver(128);
     // ChokudaiBeamSolver solver(3, 100 * prob->width * prob->height);
     // prob->calculateLegalActions();
     auto answer = solver.solve(*prob);

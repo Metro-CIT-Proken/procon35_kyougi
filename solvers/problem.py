@@ -8,11 +8,19 @@ from enum import IntEnum
 class Board:
     CELL_SIZE = 2 * 256 * 256 // 256
 
-    def __init__(self, prob: "Problem", json):
-        self.board = np.array([[int(x) for x in line] for line in json], dtype=np.int8)
-        self.height = self.board.shape[0]
-        self.width = self.board.shape[1]
+    def __init__(self, prob: "Problem", json = None, width = None, height = None):
         self.prob = prob
+        if json is not None:
+            self.board = np.array([[int(x) for x in line] for line in json], dtype=np.int8)
+            self.height = self.board.shape[0]
+            self.width = self.board.shape[1]
+        else:
+            self.board = np.zeros((height, width), dtype=np.int8)
+            self.height = height
+            self.width = width
+
+    def to_json(self):
+        return ["".join(map(str, line)) for line in self.board]
 
 class Stencil:
     class StencilDirection(IntEnum):
@@ -37,6 +45,16 @@ class Stencil:
         ret.prob = prob
         ret.cells = np.array([[int(x) for x in line] for line in json["cells"]], dtype=np.int8)
         return ret
+    
+    def to_json(self):
+        return {
+            "width": self.width,
+            "height": self.height,
+            "p": self.id,
+            "cells": [
+                "".join(map(str, line)) for line in self.cells
+            ]
+        }
     
     def apply(self, board: Board, x, y, s: StencilDirection):
         new_board = copy.copy(board)
@@ -86,13 +104,22 @@ class Stencil:
                 yield (x, y)
 
 class Problem:
-    def __init__(self, json):
-        self.start = Board(self, json["board"]["start"])
-        self.goal = Board(self, json["board"]["goal"])
-        self.generals = dict[int, Stencil]()
-        for stencil in json["general"]["patterns"]:
-            p = Stencil.from_json(self, stencil)
-            self.generals[p.id] = p
+    def __init__(self, json = None, width = None, height = None):
+        if json is not None:
+            self.start = Board(self, json["board"]["start"])
+            self.goal = Board(self, json["board"]["goal"])
+            self.generals = dict[int, Stencil]()
+            self.width = json["board"]["width"]
+            self.height = json["board"]["height"]
+            for stencil in json["general"]["patterns"]:
+                p = Stencil.from_json(self, stencil)
+                self.generals[p.id] = p
+        else:
+            self.start = Board(self, width=width, height=height)
+            self.goal = Board(self, width=width, height=height)
+            self.generals = dict[int, Stencil]()
+            self.width = width
+            self.height = height
         self.createStencils()
 
     def createStencils(self):
@@ -113,3 +140,20 @@ class Problem:
                     for x in range(size):
                         p.cells[y][x] = 1 if funcs[i](x, y) else 0
                 self.generals[p_id] = p
+
+    def to_json(self):
+        general_stencils = list(filter(lambda x: x.id >= 26, self.generals.values()))
+        return {
+            "board": {
+                "width": self.width,
+                "height": self.height,
+                "start": self.start.to_json(),
+                "goal": self.goal.to_json()
+            },
+            "general": {
+                "n": len(general_stencils),
+                "patterns": [
+                    x.to_json() for x in general_stencils
+                ]
+            }
+        }

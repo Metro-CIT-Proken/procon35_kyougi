@@ -1,6 +1,8 @@
 #include <memory>
 #include <iostream>
 #include <queue>
+#include <array>
+#include <unordered_set>
 
 #include "board.h"
 #include "bitboard.h"
@@ -20,30 +22,107 @@ void print_board(const Problem &prob, const Board &board)
 
 static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &board)
 {
-    int eval = 0;
+    int eval_r = 0,
+        eval_l = 0;
     bool end = false;
-    for(int y = 0; y < prob.height; y++) {
-        for(int x = 0; x < prob.width; x++) {
+    for(int y = 0; y < prob.prob->height; y++) {
+        // for(int w = 0; w < board.wordsPerLine; w++) {
+        //     auto &test_word = board.getWord(y, w),
+        //         &goal_word  = prob.goal.getWord(y, w);
+        //     if(test_word != goal_word) {
+        //         auto diff = test_word ^ goal_word;
+        //         int diff_x = _lzcnt_u64(diff) / CELL_BITS;
+        //         eval += 1000 * diff_x;
+
+
+        //         for(int wj = w + 1; w < board.wordsPerLine; wj++) {
+
+        //         }
+
+        //         end = true;
+        //         break;
+        //     }
+
+        //     eval += 1000 * (WORD_BITS / CELL_BITS);
+        // }
+
+
+
+        for(int x = 0; x < prob.prob->width; x++) {
             if(board.getCell(x, y) != prob.goal.getCell(x, y)) {
-                int tx = x;
-                char c = prob.goal.getCell(x, y);
-                while(++tx <= prob.width) {
-                    if(c == board.getCell(tx, y)) {
-                        eval += prob.width - (tx - x);
-                        break;
+                // int tx = x;
+                // int c = prob.goal.getCell(x, y);
+                // while(++x <= prob.prob->width) {
+                //     if(c == board.getCell(x, y)) {
+                //         eval_r += prob.prob->width - (x - tx);
+                //         break;
+                //     }
+                // }
+
+                int sum_diff = 0;
+                std::array<int, 4> x_start;
+                std::fill(x_start.begin(), x_start.end(), x);
+                int x_end = std::min(x + 1 + 16, prob.width);
+                for(int tx = x; tx < x_end; tx++) {
+                    int c = prob.goal.getCell(tx, y);
+                    for(int sx = x_start[c]; sx < prob.width; sx++) {
+                        if(board.getCell(sx, y) == c) {
+                            sum_diff += std::abs(tx - sx);
+                            x_start[c] = sx + 1;
+                            break;
+                        }
                     }
                 }
+
+                // eval_r += 1000 * (prob.width - x) - sum_diff;
+                eval_r += prob.width - sum_diff / (x_end - x);
 
                 end = true;
                 break;
             }
-            eval += 1000;
+            eval_r += 1000;
         }
-        if(end) {
-            break;
-        }
+
+        // {
+        //     int sum_diff = 0;
+        //     std::array<int, 4> x_start = {};
+        //     for(int x = 0; x < prob.width; x++) {
+        //         int c = board.getCell(x, y);
+        //         for(int sx = x_start[c]; sx < prob.width; sx++) {
+        //             if(prob.goal.getCell(sx, y) == c) {
+        //                 sum_diff += std::abs(sx - x);
+        //                 x_start[c] = sx + 1;
+        //                 break;
+        //             }
+        //         }
+        //     }
+
+        //     eval_r += sum_diff;
+        // }
+
+        // {
+        //     int sum_diff = 0;
+        //     std::array<int, 4> x_start = {};
+        //     for(int x = 0; x < prob.width; x++) {
+        //         int c = board.getCell(prob.width - 1 - x, y);
+        //         for(int sx = x_start[c]; sx < prob.width; sx++) {
+        //             if(prob.goal.getCell(prob.width - 1 - sx, y) == c) {
+        //                 sum_diff += std::abs(sx - x);
+        //                 x_start[c] = sx + 1;
+        //                 break;
+        //             }
+        //         }
+        //     }
+
+        //     eval_l += sum_diff;
+        // }
+
+        // if(end) {
+        //     break;
+        // }
     }
-    return eval;
+
+    return eval_r;
 }
 
 std::vector<Action> BeamSolver::solve(const Problem &prob)
@@ -55,6 +134,8 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
     auto board_start = std::make_shared<Board_bitboard>(bprob.start);
     q.emplace(board_start, 0, 0, 0, 0, StencilDirection::UP, nullptr);
     int eval_max = -1;
+
+    std::unordered_set<Board_bitboard, Board_bitboard::hash> visited_nodes;
 
     // ビーム深さで探索する
     for(int di = 0; di < this->beamD; di++) {
@@ -69,7 +150,7 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
             // キューから状態を取り出す
             std::shared_ptr<BeamState> now_state(new BeamState(q.top()));
             q.pop();
-            
+
             // 盤面が省略されているなら生成する
             if(!now_state->board) {
                 auto prev_state = now_state->prevState;
@@ -93,6 +174,12 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
                     // 盤面をコピーして、次の盤面を生成する
                     auto new_board = std::make_shared<Board_bitboard>(*now_state->board);
                     new_board->advance(it_p->second, it_act->x, it_act->y, it_act->s);
+
+                    if(visited_nodes.count(*new_board)) {
+                        continue;
+                    }
+                    visited_nodes.insert(*new_board);
+
                     int eval = evaluateBoard(bprob, *new_board);
                     BeamState new_state(nullptr, eval, it_p->first, it_act->x, it_act->y, it_act->s, now_state);
 
@@ -105,14 +192,7 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
                     // 盤面が完成しているかどうか判定する
                     if(eval != prob.width * prob.height * 1000) {
                         // 未完成ならキューにいれて、次の探索へ
-                        // if(next_q.size() >= beamW && next_q.top().eval <= eval) {
-                        //     continue;
-                        // }
                         next_q.emplace(new_state);
-
-                        // if(next_q.size() > beamW) {
-                        //     next_q.pop();
-                        // }
                     }
                     else {
                         // 完成なら解答をまとめてreturnする
