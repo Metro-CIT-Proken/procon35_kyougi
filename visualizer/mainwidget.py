@@ -19,6 +19,7 @@ from move import *
 from back import *
 from config import *
 from get_problem import *
+from post_answer import *
 
 
 
@@ -35,11 +36,6 @@ class MainWidget(QWidget):
             self.problem = json.load(f)
         with open(self.args[2]) as f:
             self.answer = json.load(f)
-
-        # self.setMinimumSize(100, 100)
-        # self.setMaximumSize(1000, 1000)
-        # self.resize(1000, 1000)
-        # self.grabKeyboard()
 
         self.fixed_form_num =  self.problem['general']['n']
         self.fixed_form_numbers = [ self.problem['general']['patterns'][x]['p'] for x in range(self.fixed_form_num)]
@@ -615,7 +611,13 @@ class MainWidget(QWidget):
 
 
     def get(self):
-        pass
+        get = Get()
+        problem = get.response_text
+
+
 
     def post(self):
+        Post("answer.json")
+
+    def reset():
         pass
