@@ -15,6 +15,7 @@ from OpenGL.GLU import *
 
 
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -22,6 +23,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Test GUI')
         self.setGeometry(300, 50, 1200, 1200)
         self.widget = MainWidget(self)
+
 
         # self.stacked_widget = QStackedWidget()
         # self.homewidget = HomeWindow(self)
@@ -64,3 +66,7 @@ class MainWindow(QMainWindow):
         self.widget.resize(
             event.size().width(),
             event.size().height())
+
+    def closeEvent(self, event: QCloseEvent):
+        self.widget.close()
+        event.accept()
