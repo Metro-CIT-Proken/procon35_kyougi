@@ -210,8 +210,8 @@ def output():
             "n": len(k_dict),
             "patterns": [{
                 "p": key,
-                "width": nuki.shape[0],
-                "height": nuki.shape[1],
+                "width": nuki.shape[1],
+                "height": nuki.shape[0],
                 "cells": field_to_string(nuki)
             } for key, nuki in k_dict.items()]
         }
