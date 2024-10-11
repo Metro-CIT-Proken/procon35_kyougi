@@ -128,10 +128,10 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
 
         }
 
-        std::cout << "line" << l << "finshed" << std::endl;
+        std::cerr << "line" << l << "finshed" << std::endl;
 
     }
-    std::cout << act.size() << std::endl;
+    std::cerr << act.size() << std::endl;
 
     return act;
 }
