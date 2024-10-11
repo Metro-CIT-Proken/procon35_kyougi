@@ -3,6 +3,7 @@
 #include <queue>
 #include <array>
 #include <unordered_set>
+#include <unordered_map>
 
 #include <x86intrin.h>
 
@@ -77,6 +78,36 @@ static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &boa
             eval_r += 1000;
         }
 
+        for(int x = prob.prob->width - 1; x >= 0; x--) {
+            if(board.getCell(x, y) != prob.goal.getCell(x, y)) {
+                int tx = x;
+                int c = prob.goal.getCell(x, y);
+                while(--x >= 0) {
+                    if(c == board.getCell(x, y)) {
+                        eval_l += prob.prob->width - (tx - x);
+                        break;
+                    }
+                }
+
+                // int dsum = 0;
+                // for(int tx = x + 1; tx < prob.width; tx++) {
+                //     int c = prob.goal.getCell(tx, y);
+                //     for(int sx = tx + 1; sx < prob.width; sx++) {
+                //         if(board.getCell(sx, y) == c) {
+                //             dsum += sx - tx;
+                //             break;
+                //         }
+                //     }
+                // }
+
+                // eval_r -= dsum / (prob.width - x);
+
+                end = true;
+                break;
+            }
+            eval_l += 1000;
+        }
+
         // {
         //     int sum_diff = 0;
         //     std::array<int, 4> x_start = {};
@@ -99,7 +130,7 @@ static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &boa
         // }
     }
 
-    return eval_r;
+    return std::max(eval_r, eval_l);
 }
 
 std::vector<Action> ChokudaiBeamSolver::solve(const Problem &prob_normal)
@@ -107,7 +138,7 @@ std::vector<Action> ChokudaiBeamSolver::solve(const Problem &prob_normal)
     using std::cout, std::cerr, std::endl;
 
     Problem_bitboard prob(&prob_normal);
-    int beam_count = 5;
+    int beam_count = 10;
     std::vector<std::priority_queue<BeamState>> beam(this->beamD + 1);
     auto board_start = std::make_shared<Board_bitboard>(prob.start);
     beam[0].push(BeamState{board_start, 0, 0, 0, 0, StencilDirection::UP, nullptr});
@@ -115,6 +146,8 @@ std::vector<Action> ChokudaiBeamSolver::solve(const Problem &prob_normal)
 
     std::shared_ptr<BeamState> best_state;
     int best_ops = INT32_MAX;
+
+    std::unordered_map<Board_bitboard, int, Board_bitboard::hash> visited_nodes;
 
     // ビームの本数
     for(int bi = 0; bi < beam_count; bi++) {
@@ -165,6 +198,11 @@ std::vector<Action> ChokudaiBeamSolver::solve(const Problem &prob_normal)
                         // 盤面をコピーして、次の盤面を生成する
                         auto new_board = std::make_shared<Board_bitboard>(*now_state->board);
                         new_board->advance(prob.stencils.at(it_act->p), it_act->x, it_act->y, it_act->s);
+
+                        if(visited_nodes.count(*new_board) && visited_nodes.at(*new_board) > di) {
+                            continue;
+                        }
+                        visited_nodes.insert({*new_board, di});
 
                         int eval = evaluateBoard(prob, *new_board);
                         BeamState new_state(nullptr, eval, it_p->first, it_act->x, it_act->y, it_act->s, now_state);

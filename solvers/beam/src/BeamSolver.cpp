@@ -62,7 +62,7 @@ static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &boa
                 int sum_diff = 0;
                 std::array<int, 4> x_start;
                 std::fill(x_start.begin(), x_start.end(), x);
-                int x_end = std::min(x + 1 + 16, prob.width);
+                int x_end = std::min(x + 1 + 8, prob.width);
                 for(int tx = x; tx < x_end; tx++) {
                     int c = prob.goal.getCell(tx, y);
                     for(int sx = x_start[c]; sx < prob.width; sx++) {
@@ -81,6 +81,32 @@ static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &boa
                 break;
             }
             eval_r += 1000;
+        }
+
+        for(int x = prob.prob->width - 1; x >= 0; x--) {
+            if(board.getCell(x, y) != prob.goal.getCell(x, y)) {
+                int sum_diff = 0;
+                std::array<int, 4> x_start;
+                std::fill(x_start.begin(), x_start.end(), x);
+                int x_end = std::max(x - 1 - 8, 0);
+                for(int tx = x; tx >= x_end; tx--) {
+                    int c = prob.goal.getCell(tx, y);
+                    for(int sx = x_start[c]; sx >= 0; sx--) {
+                        if(board.getCell(sx, y) == c) {
+                            sum_diff += std::abs(tx - sx);
+                            x_start[c] = sx - 1;
+                            break;
+                        }
+                    }
+                }
+
+                // eval_r += 1000 * (prob.width - x) - sum_diff;
+                eval_l += prob.width - sum_diff / (x - x_end);
+
+                end = true;
+                break;
+            }
+            eval_l += 1000;
         }
 
         // {
@@ -122,7 +148,7 @@ static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &boa
         // }
     }
 
-    return eval_r;
+    return std::max(eval_r, eval_l);
 }
 
 std::vector<Action> BeamSolver::solve(const Problem &prob)

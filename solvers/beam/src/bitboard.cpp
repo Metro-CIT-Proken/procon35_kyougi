@@ -1,6 +1,7 @@
 #include <bit>
 #include <x86intrin.h>
 #include <functional>
+#include <assert.h>
 
 #include "bitboard.h"
 
@@ -81,6 +82,8 @@ Board Board_bitboard::toBoard(const Problem &prob) const {
 }
 
 void Board_bitboard::advance(const Stencil_bitboard &stenc, int x, int y, int s) {
+    assert(s != 0 && s != 1);
+    
     int y_start = std::max(0, y),
         y_end   = std::min(stenc.prob->height, y + stenc.height);
     for(int yi = y_start; yi < y_end; yi++) {

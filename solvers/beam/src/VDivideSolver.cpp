@@ -4,7 +4,7 @@
 std::vector<Action> VDivideSolver::solve(const Problem &prob)
 {
     int lines_per_once = (cells_per_once + prob.width - 1) / prob.width;
-    BeamSolver insolver(30, 10 * prob.width * prob.height);
+    BeamSolver insolver(10, 10 * prob.width * prob.height);
     std::vector<Action> result;
 
     Problem cur_prob = prob;
