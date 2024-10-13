@@ -10,6 +10,7 @@ class FirstDoubleWidget(QWidget):
         self.is_focus = False
         self.start_board = start_board
         self.goal_board = goal_board
+        self.op_idx = 0
         # self.post_button = QPushButton("POST",self)
         # self.post_button.clicked.connect(self.post)
         # self.answer = answer

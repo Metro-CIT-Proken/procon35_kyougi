@@ -35,7 +35,7 @@ class ScrollWidget(QWidget):
 
 
     def update_gl_on_scroll(self,value):
-        self.glwidget.update()
+        self.update()
 
     def resizeEvent(self,event):
         width = self.width()

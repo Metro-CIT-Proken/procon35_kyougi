@@ -27,6 +27,7 @@ TRANSLATE_GL = WIDTH/2#qtの座標系に変換する定数
 class OpenGLWidget(QOpenGLWidget):
     def __init__(self,board,goal_board,zoom,zoom_direction,xtext_int=None,ytext_int=None,fournflag=None,parent=None):
         super().__init__(parent)
+        self.is_focus = False
         self.board = board
         self.goal_board = goal_board
         self.zoom = zoom
