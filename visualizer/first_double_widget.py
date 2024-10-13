@@ -4,27 +4,26 @@ from mainwidget import *
 from PyQt6.QtGui import *
 from post_answer import *
 
-class DoubleWidget(QWidget):
-    def __init__(self, start_board, goal_board, answer_json_file, config ,parent=None):
+class FirstDoubleWidget(QWidget):
+    def __init__(self, start_board, goal_board ,parent=None):
         super().__init__(parent)
         self.is_focus = False
         self.start_board = start_board
         self.goal_board = goal_board
-        self.post_button = QPushButton("POST",self)
-        self.post_button.clicked.connect(self.post)
-        self.answer = answer_json_file
-        self.config = config
+        # self.post_button = QPushButton("POST",self)
+        # self.post_button.clicked.connect(self.post)
+        # self.answer = answer
 
         board_layout = QHBoxLayout()
-        button_layout = QHBoxLayout()
+        # button_layout = QHBoxLayout()
         layout = QVBoxLayout(self)
         layout.addLayout(board_layout)
-        layout.addLayout(button_layout)
+        # layout.addLayout(button_layout)
 
         board_layout.addWidget(start_board)
         board_layout.addWidget(goal_board)
 
-        button_layout.addWidget(self.post_button)
+        # button_layout.addWidget(self.post_button)
 
         self.setLayout(layout)
         self.setMinimumSize(0, 0)
@@ -61,8 +60,8 @@ class DoubleWidget(QWidget):
     def resizeGL(self,width,height):
         print(f"double widget size: height:{height} width:{width}")
 
-    def post(self):
-        Post(self.answer, self.config)
+    # def post(self):
+    #     Post()
 
 
 

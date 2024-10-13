@@ -42,5 +42,7 @@ class Get():
 
             else:
                 print("Failed with status code:",response.status_code)
+                return 1
         except requests.exceptions.RequestException as e :
             print('Error',e)
+            return 1

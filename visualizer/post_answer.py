@@ -4,12 +4,15 @@ import json
 from config import *
 
 class Post():
-    def __init__(self,answer_json_name):
-        self.config = Config("config.json")
+    def __init__(self,answer_json_name,config):
+        self.config = config
         self.answer_json_name = answer_json_name
+        print(f"ip_address: {self.config.ip_address}")
+        print(f"port: {self.config.port}")
+        print(f"token: {self.config.token}")
         self.post()
     def post(self):
-        url = f"http://{self.config.ip_address}:{self.config.port}/answere"
+        url = f"http://{self.config.ip_address}:{self.config.port}/answer"
 
         header = { "Content-Type": "application/json","Procon-Token":self.config.token,}
 

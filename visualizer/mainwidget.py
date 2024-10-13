@@ -6,6 +6,7 @@ from PyQt6.QtGui import *
 
 from PyQt6.QtWidgets import *
 from get_problem import *
+from first_double_widget import *
 from double_widget  import *
 import json
 from OpenGL.GL import *
@@ -19,6 +20,7 @@ from termcolor import colored
 from move import *
 from back import *
 from config import *
+import copy
 
 
 
@@ -144,11 +146,12 @@ class MainWidget(QWidget):
             self.port_line = QLineEdit(self)
             self.port_line.setText(str(self.config.port))
             self.port_line.textEdited.connect(self.config.port_edited)
+
             self.token_line = QLineEdit(self)
             self.token_line.setText(self.config.token)
             self.token_line.textEdited.connect(self.config.token_edited)
             self.get_button = QPushButton("GET",self)
-            self.post_button = QPushButton("POST",self)
+            # self.post_button = QPushButton("POST",self)
 
 
 
@@ -183,13 +186,13 @@ class MainWidget(QWidget):
 
 
             self.get_button.clicked.connect(self.get)
-            self.post_button.clicked.connect(self.post)
+            # self.post_button.clicked.connect(self.post)
 
             layout_button = QHBoxLayout()
             layout_cont.addLayout(layout_button)
 
             layout_button.addWidget(self.get_button)
-            layout_button.addWidget(self.post_button)
+            # layout_button.addWidget(self.post_button)
 
             if "answer" in self.glwidget_info  :
                 self.slider = QSlider(Qt.Orientation.Horizontal)
@@ -748,7 +751,7 @@ class MainWidget(QWidget):
                     self.widgets_list[0]["goal_widget"] = first_goal_gl
                     # self.widgets_list[0]
 
-                    first_double_widget = DoubleWidget(first_start_gl, first_goal_gl)
+                    first_double_widget = FirstDoubleWidget(first_start_gl, first_goal_gl)
                     self.widgets_list[0]["double_widget"] = first_double_widget
 
                     self.first_gl_layout.addWidget(first_double_widget)
@@ -771,11 +774,11 @@ class MainWidget(QWidget):
 
                 # self.widgets_list[0]["fixed_form_cells"] = fixed_form_cells
 
-                print(f"widget_list: {self.widgets_list}")
 
-                print(len(self.answers_list))
 
-                for i in range(len(self.answers_list)):
+                print(len(self.answers_list)-1)
+
+                for i in range(len(self.answers_list)-1):
                     self.widgets_list.append({})
                     zoom = 1
                     zoom_direction = 0
@@ -800,11 +803,13 @@ class MainWidget(QWidget):
                     # self.length_list.append([b_hei, b_wid])
 
 
-                    for j in range(0,len(self.answers_list)):
+                    # for j in range(0,len(self.answers_list)):
                         # self.answers_list.append(answer)
-                        self.widgets_list[i+1]["answer"] = self.answers_list[j]
+                    self.widgets_list[i+1]["answer"] = self.answers_list[i+1]
 
                     self.widgets_list[i+1]["answer_num"] = self.widgets_list[i+1]["answer"]["n"]
+
+                    print(f"widget_list: {self.widgets_list}")
 
                     dis_board = [[0 for _ in range(b_wid)]for _ in range(b_hei)]
                     self.widgets_list[i+1]["dis_board"] = dis_board
@@ -828,10 +833,14 @@ class MainWidget(QWidget):
                     self.widgets_list[i+1]["goal_widget"] = goal_gl_board
 
 
-
+                    # answer = self.answers_list[i+1]
+                    answer = self.args[2]
+                    config = self.config
                     # self.goal_widgets_list.append(goal_gl_board)
-                    double_widget = DoubleWidget(start_gl_board, goal_gl_board)
+                    double_widget = DoubleWidget(start_gl_board, goal_gl_board, answer, config)
                     self.widgets_list[i+1]["double_widget"] = double_widget
+
+
 
 
                     self.container_layout.addWidget(double_widget)
@@ -848,17 +857,17 @@ class MainWidget(QWidget):
 
 
 
-            self.fixed_form_num = self.get_pro.fixed_form_num
-            # self.widgets_list[0]["fixed_form_num"] = fixed_form_num
+                self.fixed_form_num = self.get_pro.fixed_form_num
+                # self.widgets_list[0]["fixed_form_num"] = fixed_form_num
 
-            self.fixed_form_numbers = self.get_pro.fixed_form_numbers
-            # self.widgets_list[0]["fixed_form_numbers"] = fixed_form_numbers
+                self.fixed_form_numbers = self.get_pro.fixed_form_numbers
+                # self.widgets_list[0]["fixed_form_numbers"] = fixed_form_numbers
 
-            self.fixed_form_widths = self.get_pro.fixed_form_widths
-            # self.widgets_list[0]["fixed_form_widths"] = fixed_form_widths
+                self.fixed_form_widths = self.get_pro.fixed_form_widths
+                # self.widgets_list[0]["fixed_form_widths"] = fixed_form_widths
 
-            self.fixed_form_heights = self.get_pro.fixed_form_heights
-            # self.widgets_list[0]["fixed_form_heights"] = fixed_form_heights
+                self.fixed_form_heights = self.get_pro.fixed_form_heights
+                # self.widgets_list[0]["fixed_form_heights"] = fixed_form_heights
 
             print(f"widget_list2: {self.widgets_list}")
             self.container_widget.setLayout(self.container_layout)

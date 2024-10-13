@@ -30,7 +30,7 @@ class Config:
         self.token = json_data["token"]
 
     def ip_address_edited(self,text):
-            self.ip_address = text
+        self.ip_address = text
 
     def port_edited(self,text):
         self.port = text
