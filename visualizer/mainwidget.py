@@ -612,21 +612,28 @@ class MainWidget(QWidget):
         for widget in self.widgets_list:
                 print(f"前: {widget['start_widget'].board}")
                 print()
+        start_board = self.glwidget.board
+        goal_board = self.glwidget.goal_board
         Move(x, y, s, cells, self.glwidget.board, self.glwidget.goal_board)
+        self.glwidget.board = start_board
         self.op_idx+=1
         self.widgets_list[self.index]["op_idx"]+=1
         # self.widgets_list[self.index]["start_board"] = start_board
         # self.glwidget.board = self.glwidget.board
         for widget in self.widgets_list:
-                print(f"後: {widget['start_widget'].board}")
+                print(widget["start_widget"].board,id(widget["start_widget"].board))
+                for  i in range(len(widget["start_widget"].board)):
+                    for j in range(len(widget["start_widget"].board[0])):
+                        print(widget["start_widget"].board[i][j],id(widget["start_widget"].board[i][j]))
                 print()
+        self.glwidget.update()
         # for widget in self.widgets_list:
         #     print(widget["start_board"])
 
 
     #一手戻る
     def apply_backward(self):
-        if self.op_idx-1 >= 0:
+        # if self.op_idx-1 >= 0:
             print("apply_backward")
             print(self.op_idx)
             p = self.answer["ops"][self.op_idx-1]["p"]
@@ -634,13 +641,20 @@ class MainWidget(QWidget):
             y = self.answer["ops"][self.op_idx-1]["y"]
             s = self.answer["ops"][self.op_idx-1]["s"]
             cells = self.define_cell(p)
-            Back(x,y,s,p,cells,self.glwidget.board,self.glwidget.goal_board)
+            start_board = self.glwidget.board
+            goal_board = self.glwidget.goal_board
+            Back(x,y,s,p,cells,start_board,goal_board)
+            self.glwidget.board = start_board
             self.op_idx -= 1
             self.widgets_list[self.index]["op_idx"]-=1
             # self.glwidget.board
             for widget in self.widgets_list:
-                print(widget["start_widget"].board)
+                print(widget["start_widget"].board,id(widget["start_widget"].board))
+                for  i in range(len(widget["start_widget"].board)):
+                    for j in range(len(widget["start_widget"].board[0])):
+                        print(widget["start_widget"].board[i][j],id(widget["start_widget"].board[i][j]))
                 print()
+            self.glwidget.update()
             # for widget in self.widgets_list:
             #     print(widget["start_board"])
             #     print()
@@ -693,13 +707,13 @@ class MainWidget(QWidget):
                 zoom_direction = 0
                 self.widgets_list[0]["zoom_direction"] = zoom_direction
 
-                start_board = self.get_pro.start_board
+                start_board = [row[:] for row in self.get_pro.start_board]
                 # self.widgets_list[0]["start_board"] = start_board
 
 
 
 
-                goal_board = self.get_pro.goal_board
+                goal_board = [row[:] for row in self.get_pro.goal_board]
                 # self.widgets_list[0]["goal_board"] = goal_board
 
                 b_wid = self.get_pro.board_width
@@ -795,10 +809,10 @@ class MainWidget(QWidget):
                     dis_board = [[0 for _ in range(b_wid)]for _ in range(b_hei)]
                     self.widgets_list[i+1]["dis_board"] = dis_board
 
-                    start_board = self.get_pro.start_board
+                    start_board = [row[:] for row in self.get_pro.start_board]
                     self.widgets_list[i+1]["start_board"] = start_board
 
-                    goal_board = self.get_pro.goal_board
+                    goal_board =  [row[:] for row in self.get_pro.goal_board]
                     self.widgets_list[i+1]["goal_board"] = goal_board
 
                     if self.s_flag:
