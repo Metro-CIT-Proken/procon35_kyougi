@@ -1,3 +1,6 @@
+from PyQt6.QtCore import *
+from PyQt6.QtWidgets import QApplication, QWidget
+
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from OpenGL.GL import *
 from OpenGL.GLUT import *
@@ -6,6 +9,7 @@ import cv2
 import numpy as np
 from collections import deque
 import colorsys
+from mainwidget import *
 
 WIDTH = 1000
 HEIGHT = 1000
@@ -27,17 +31,21 @@ class OpenGLWidget(QOpenGLWidget):
         self.goal_board = goal_board
         self.zoom = zoom
         self.zoom_direction = zoom_direction
-        self.setMinimumSize(0, 0)
+        self.setMinimumSize(0, 10)
         self.setMaximumSize(1000, 1000)
+
         self.zoomx = 0
         self.zoomy = 0
         self.xtext_int = xtext_int
         self.ytext_int = ytext_int
+        # self.is_focus = False
         # self.answer = answer
         # self.op_idx = op_idx
         self.yazirusi = ""
         # self.args = args
         self.fournflag = fournflag
+        self.is_focus = False
+        self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
 
 
@@ -92,8 +100,12 @@ class OpenGLWidget(QOpenGLWidget):
         glRasterPos2f(0.0,0.0)
         width_square = len(self.board[0])
         height_square = len(self.board)
-        sx = 1/width_square
-        sy = 1/height_square
+        if width_square != 0:
+            sx = 1/width_square
+            sy = 1/height_square
+        else:
+            sx = 1
+            sy = 1
         first = FIRST/TRANSLATE_GL
         s = min(sx,sy)
         glMatrixMode(GL_MODELVIEW)
@@ -116,7 +128,7 @@ class OpenGLWidget(QOpenGLWidget):
 
         for i in range(height_square):
             for j in range(width_square):
-                if not(self.fournflag) and not(self.fournflag == None):
+                if self.fournflag and not(self.fournflag == None):
                         ratio = self.search_near_goal(j,i)/max(self.b_hei,self.b_wid)*3#距離が遠ければ色が薄くなり近くなれば濃くなる
                         saturation = 90*(1.0-ratio)
                         h,ss,v = color[self.board[i][j]]*60,int(saturation*255//100),255
@@ -146,7 +158,7 @@ class OpenGLWidget(QOpenGLWidget):
         glEnd()
         for i in range(height_square):
             for j in range(width_square):
-                if not(self.fournflag) and not(self.fournflag == None) and not(self.ytext_int==i and self.xtext_int == j):
+                if self.fournflag and not(self.fournflag == None) and not(self.ytext_int==i and self.xtext_int == j):
                     ratio = self.search_near_goal(j,i)/max(self.b_hei,self.b_wid)*3#距離が遠ければ色が薄くなり近くなれば濃くなる
                     saturation = 90*(1.0-ratio)
                     h,ss,v = color[self.board[i][j]]*60,int(saturation*255//100),255
@@ -273,27 +285,7 @@ class OpenGLWidget(QOpenGLWidget):
         print(f"height:{height},width:{width}")
         print(f"最小{min(height,width)}")
 
-        # # ウィンドウサイズが変更された時に呼ばれる
-        # if height == 0:
-        #     height = 1  # ゼロ割防止
 
-        # # ウィンドウ全体をビューポートに設定
-        # glViewport(0, 0, width, height)
-
-        # # 投影行列を設定
-        # glMatrixMode(GL_PROJECTION)
-        # glLoadIdentity()
-
-        # # アスペクト比に応じて正投影行列を設定
-        # aspect_ratio = width / height
-        # if aspect_ratio > 1.0:
-        #     # 横長のウィンドウの場合
-        #     glOrtho(-aspect_ratio, aspect_ratio, -1.0, 1.0, -1.0, 1.0)
-        # else:
-        #     # 縦長のウィンドウの場合
-        #     glOrtho(-1.0, 1.0, -1.0 / aspect_ratio, 1.0 / aspect_ratio, -1.0, 1.0)
-
-        # glMatrixMode(GL_MODELVIEW)
 
         # ウィンドウのサイズ変更時に呼ばれる
         if height == 0:
@@ -319,3 +311,14 @@ class OpenGLWidget(QOpenGLWidget):
 
     def mousePressEvent(self,event):
         self.update()
+        super().mousePressEvent(event)
+
+    def focusInEvent(self,event):
+        self.is_focus = True
+        print("get focus gl")
+        super().focusInEvent(event)
+
+    def focusOutEvent(self,event):
+        self.is_focus = False
+        print("lost focus gl")
+        super().focusOutEvent(event)
