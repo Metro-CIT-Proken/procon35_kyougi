@@ -202,8 +202,9 @@ class MainWidget(QWidget):
             self.dis_board = self.glwidget_info["dis_board"]
             self.board_width = self.glwidget_info["board_width"]
             self.double_widget.update()
-        # self.update()
-        # self.glwidget.update()
+            self.glwidget.update()
+        self.update()
+
 
 
     def keyPressEvent(self, event: QKeyEvent):
@@ -339,7 +340,7 @@ class MainWidget(QWidget):
                 self.glwidget.zoomy = 0
 
         self.glwidget_goal.update()
-        # self.glwidget.update()
+        self.glwidget.update()
 
     #0.5秒ごとに進む・戻る
     def opTimerCallback(self):
