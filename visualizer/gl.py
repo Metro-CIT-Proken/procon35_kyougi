@@ -52,18 +52,45 @@ class OpenGLWidget(QOpenGLWidget):
 
 
 
+    def write_text(self, r, g, b, w, h, string):
+        # 初期化
+        img = np.zeros((132, 128, 3), dtype=np.uint8)
 
-    def write_text(self,r,g,b,w,h,string):#,r,g,b,w,h
-        img = np.zeros((132,128,3),dtype=np.uint8)
-        cv2.putText(img,string, (60, 70), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255,255,255))
+        # 文字列を画像に描画 (BGR ではなく、最初からRGBで描画)
+        cv2.putText(img, string, (60, 70), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255, 255, 255), thickness=1, lineType=cv2.LINE_AA)
+
+        # カラー変換を削除して最初からRGBで処理する
         img = cv2.flip(img, 0)
-        img= cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-        glRasterPos2f(w,h)
+
+        # OpenGL描画位置設定
+        glRasterPos2f(w, h)
+
+        # OpenGL描画時の色設定
         glColor3f(0.0, 0.0, 0.0)
+
+        # 指定の色で置換 (np.whereは非効率なので、画像全体に対して高速処理)
         target_color = (0, 0, 0)
         change_color = (r, g, b)
-        img = np.where(img == target_color, change_color, (255, 255, 255))
-        glDrawPixels(img.shape[1], img.shape[0], GL_RGB,GL_UNSIGNED_BYTE, img)
+
+        # 遅いnp.whereの代わりに、numpyの直接操作で色を変更
+        mask = np.all(img == target_color, axis=-1)
+        img[mask] = change_color
+
+        # OpenGLにピクセルを描画
+        glDrawPixels(img.shape[1], img.shape[0], GL_RGB, GL_UNSIGNED_BYTE, img)
+
+
+    # def write_text(self,r,g,b,w,h,string):#,r,g,b,w,h
+    #     img = np.zeros((132,128,3),dtype=np.uint8)
+    #     cv2.putText(img,string, (60, 70), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255,255,255))
+    #     img = cv2.flip(img, 0)
+    #     img= cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    #     glRasterPos2f(w,h)
+    #     glColor3f(0.0, 0.0, 0.0)
+    #     target_color = (0, 0, 0)
+    #     change_color = (r, g, b)
+    #     img = np.where(img == target_color, change_color, (255, 255, 255))
+    #     glDrawPixels(img.shape[1], img.shape[0], GL_RGB,GL_UNSIGNED_BYTE, img)
 
 
     def initializeGL(self):
