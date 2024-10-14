@@ -15,7 +15,9 @@ add_executable(solver
     src/BeamSolver.cpp
     src/BeamSolver_chokudai.cpp
     src/bitboard.cpp 
-    src/VDivideSolver.cpp)
+    src/VDivideSolver.cpp
+    src/LineCountSolver.cpp
+)
 target_link_libraries(solver PRIVATE nlohmann_json::nlohmann_json)
 
 # tests
