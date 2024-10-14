@@ -2,6 +2,7 @@ import sys
 import requests
 import json
 from config import *
+from requests.exceptions import HTTPError, Timeout, RequestException
 
 class Post():
     def __init__(self,answer_json_name,config):
@@ -24,18 +25,27 @@ class Post():
             exit(1)
 
 
-
         try:
             answer = requests.post(url, headers=header, json=json_data,
-                        proxies={"http": None, "https": None})
+                            proxies={"http": None, "https": None})
             if answer.status_code == 200:
                 print(f"Success: {answer.text}")
             elif answer.status_code == 400:
                 print("リクエストの内容が不十分です")
             elif answer.status_code == 401:
                 print("トークンが未取得もしくは不正です")
-        except AccessTimeError:
-            print("競技時間外です")
+            elif answer.status_code == 403:
+                print("競技時間外です")
+                exit(1)
+
+        except Exception as e:
+            print("Error",e)
             exit(1)
+        except RequestException as e:
+            print("Error",e)
+            exit(1)
+        # except AccessTimeError:
+        #     print("競技時間外です")
+        #     exit(1)
 
         print(answer.status_code)

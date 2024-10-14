@@ -39,10 +39,16 @@ class Get():
                 self.fixed_form_cells = {self.fixed_form_numbers[x] : [ [problem['general']['patterns'][x]['cells'][i][j] for
                                 j in range(len(problem['general']['patterns'][x]['cells'][i]))]for i in range(len(problem['general']['patterns'][x]['cells'])) ]
                             for x in range(self.fixed_form_num)}
-
+            elif response.status_code == 400:
+                print("リクエストの内容が不十分です")
+            elif response.status_code == 401:
+                print("トークンが未取得もしくは不正です")
+            elif response.status_code == 403:
+                print("競技時間外です")
+                exit(1)
             else:
                 print("Failed with status code:",response.status_code)
                 return 1
         except requests.exceptions.RequestException as e :
             print('Error',e)
-            return 1
+            exit(1)

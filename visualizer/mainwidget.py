@@ -360,7 +360,6 @@ class MainWidget(QWidget):
 
 
     def paintEvent(self, event):
-
         painter = QPainter(self)
 
         painter.setPen(QColor("black"))
@@ -464,6 +463,7 @@ class MainWidget(QWidget):
             #右キーを押すと一手進む
             print(self.double_widget.op_idx)
             print(self.double_widget.answer_num)
+
             if event.key() == Qt.Key.Key_Right and not(self.op_idx == self.answer_num):
                 print(self.answer_num)
                 self.right_key_check = self.applyOn(self.op_idx+1)
@@ -874,6 +874,7 @@ class MainWidget(QWidget):
                     config = self.config
                     # self.goal_widgets_list.append(goal_gl_board)
                     double_widget = DoubleWidget(start_gl_board, goal_gl_board, answer, config)
+                    double_widget.slider.valueChanged.connect(self.SliderChange)
                     double_widget.op_idx = 0
                     double_widget.answer_num = self.widgets_list[i+1]["answer"]["n"]
                     self.widgets_list[i+1]["double_widget"] = double_widget
@@ -937,5 +938,9 @@ class MainWidget(QWidget):
     def update_gl_on_scroll(self, value):
         for widget in self.widgets_list:
             widget.update()
+
+    def SliderChange(self, value):
+        if self.double_widget != self.widgets_list[0]["double_widget"]:
+            self.applyOn(value)
 
 

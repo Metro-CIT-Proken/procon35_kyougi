@@ -19,6 +19,13 @@ class DoubleWidget(QWidget):
         self.config = config
         self.effort_label = QLabel()
         self.effort_label.setFixedSize(300,20)
+        self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.slider.setMinimum(0)
+        self.slider.setMaximum(self.answer_num)
+        self.slider.setTickInterval(1)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        # self.slider.valueChanged.connect(self.onSliderChange)
+
 
 
         board_layout = QHBoxLayout()
@@ -29,8 +36,10 @@ class DoubleWidget(QWidget):
         layout.addLayout(button_layout)
 
 
+
         board_layout.addWidget(start_board)
         board_layout.addWidget(goal_board)
+        layout.addWidget(self.slider)
 
         button_layout.addWidget(self.post_button)
 
@@ -40,31 +49,6 @@ class DoubleWidget(QWidget):
         print(f"double widget size: height:{self.height()} width:{self.width()}")
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
-    # def paintEvent(self, event):
-    #     painter = QPainter(self)
-    #     painter.setPen(QPen(QColor("black"), 5, Qt.PenStyle.SolidLine))  # 黒色のペンで描画
-
-    #     # 四角形の描画 (x, y, width, height)
-    #     rect = painter.drawRect(0, 0, 1000, 1000)
-    #     # rect.raise_()
-
-
-
-        # self.setMaximumHeight(start_board.size().height())
-        # self.setMaximumHeight()
-
-
-    # def focusInEvent(self,event):
-    #     self.is_focus = True
-    #     print("double focus in")
-    #     print(self)
-    #     super().focusInEvent(event)
-
-    # def focusOutEvent(self,event):
-    #     self.is_focus = False
-    #     print("double focus out")
-    #     print(self)
-    #     super().focusOutEvent(event)
 
     def resizeGL(self,width,height):
         print(f"double widget size: height:{height} width:{width}")
@@ -74,6 +58,11 @@ class DoubleWidget(QWidget):
 
     def paintEvent(self, event):
         self.effort_label.setText(f"手数 {self.answer_num }現在 {self.op_idx} 手目 あと {self.answer_num-self.op_idx}")
+        self.slider.setMaximum(self.answer_num)
+
+    # def onSliderChange(self, value):
+    #     self.op_idx = value
+
 
 
 
