@@ -30,7 +30,7 @@ api_json_data = {
 
 
 api_json = json.dumps(api_json_data)
-print(api_json)
+
 
 
 directory_place = input("jsonファイルが入るディレクトリを選択してください: ")

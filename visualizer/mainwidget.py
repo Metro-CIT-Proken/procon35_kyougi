@@ -13,14 +13,14 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from scroll_widget import *
-from collections import Counter
 
-import numpy
-from termcolor import colored
+
+
+
 from move import *
 from back import *
 from config import *
-import copy
+
 
 
 
@@ -92,7 +92,6 @@ class MainWidget(QWidget):
             self.config.load()
         except:
             pass
-        # self.color = {0:0,1:0,2:0,3:0}
         self.dict_action = {0:"上", 1:"下", 2:"左", 3:"右"}
         self.dic_dir = ["上", "下", "左", "右"]
         check_int = True
@@ -126,9 +125,8 @@ class MainWidget(QWidget):
             self.token_line.textEdited.connect(self.config.token_edited)
             self.get_button = QPushButton("GET",self)
             self.message = QLabel()
-            self.message.setFixedSize(300,300)
+            self.message.setFixedSize(300,100)
             self.message.setWordWrap(True)
-            # self.post_button = QPushButton("POST",self)
 
 
 
@@ -216,7 +214,6 @@ class MainWidget(QWidget):
         if self.args[2] == "a":
 
             if event.key() == Qt.Key.Key_Right and not(self.op_idx == self.answer_num):
-                print(self.answer_num)
                 self.right_key_check = self.applyOn(self.op_idx+1)
             #左キーに進むと一手戻る
             elif event.key() == Qt.Key.Key_Left and not(self.op_idx == 0):
@@ -358,7 +355,6 @@ class MainWidget(QWidget):
 
     def applyOn(self, idx):
         #手を
-        print(idx)
         if idx > self.op_idx:#未来を指定した場合
             for i in range(0,idx-self.op_idx):
                 self.apply_forward()
@@ -447,7 +443,6 @@ class MainWidget(QWidget):
             if "start_board" in self.widgets_list[0]:
                 if  not(self.widgets_list[0]["start_widget"] == self.glwidget):
                         try:
-                            print("resized!")
                             self.glwidget.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
                             self.glwidget_goal.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
                             try:
@@ -475,8 +470,6 @@ class MainWidget(QWidget):
                 self.message.setText("取得成功です")
                 if self.one_get:
                     for widget in self.widgets_list:
-                        print(000)
-                        print(id(widget["double_widget"]))
                         self.scroll_area.scroll_area_layout.removeWidget(widget["double_widget"])
                         widget["double_widget"].deleteLater()
                     self.widgets_list = []
@@ -517,13 +510,13 @@ class MainWidget(QWidget):
 
 
                 if start_board != [[]] or goal_board != [[]]:
-                    if not(self.s_flag):
-                        first_start_gl = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, None, self)
-                        self.widgets_list[0]["start_widget"] = first_start_gl
-                    else:
-                        first_start_gl = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.s_flag, self)
-                        self.widgets_list[0]["start_widget"] = first_start_gl
-                    first_goal_gl = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, self)
+                    # if not(self.s_flag):
+                    #     first_start_gl = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, None, self)
+                    #     self.widgets_list[0]["start_widget"] = first_start_gl
+                    # else:
+                    first_start_gl = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.s_flag, self)
+                    self.widgets_list[0]["start_widget"] = first_start_gl
+                    first_goal_gl = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, None, None, False, self)
                     self.widgets_list[0]["goal_widget"] = first_goal_gl
                     # self.widgets_list[0]
 
@@ -571,14 +564,14 @@ class MainWidget(QWidget):
                     goal_board =  [row[:] for row in self.get_pro.goal_board]
                     self.widgets_list[i+1]["goal_board"] = goal_board
 
-                    if not(self.s_flag):
-                        start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, None, self)
-                        self.widgets_list[i+1]["start_widget"] = start_gl_board
-                        start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
-                    else:
-                        start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.s_flag, self)
-                        self.widgets_list[i+1]["start_widget"] = start_gl_board
-                        start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
+                    # if not(self.s_flag):
+                    #     start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, None, self)
+                    #     self.widgets_list[i+1]["start_widget"] = start_gl_board
+                    #     start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
+                    # else:
+                    start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.s_flag, self)
+                    self.widgets_list[i+1]["start_widget"] = start_gl_board
+                    start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
                     # self.start_widgets_list.append(start_gl_board)
                     goal_gl_board = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, self)
                     self.widgets_list[i+1]["goal_widget"] = goal_gl_board
@@ -621,9 +614,6 @@ class MainWidget(QWidget):
                 self.fixed_form_widths = self.get_pro.fixed_form_widths
 
 
-                print("widgets_list")
-                print("---------------------------")
-                print(self.widgets_list)
 
                 self.fixed_form_heights = self.get_pro.fixed_form_heights
             elif self.get_pro.status_code == 400:

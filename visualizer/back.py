@@ -1,4 +1,4 @@
-from termcolor import colored
+
 
 class Back():
     def __init__(self,x,y,s,p,cells,start_board,goal_board):

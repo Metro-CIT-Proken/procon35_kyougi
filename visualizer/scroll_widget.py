@@ -1,4 +1,4 @@
-import sys
+
 from PyQt6.QtGui import QKeyEvent
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QScrollArea, QMainWindow
 from gl import *
@@ -13,17 +13,8 @@ class ScrollWidget(QWidget):
         # self.glwidget_goal = glwidget_goal
         self.scroll_area_layout = QVBoxLayout(self)
         self.scroll_area = CustomScrollArea()
-        print(f'scroll size: {self.scroll_area}')
         self.scroll_area_layout.addWidget(self.scroll_area)
-        # scroll_widget = QWidget()
 
-        # scroll_layout = QHBoxLayout(scroll_widget)
-
-        # scroll_layout.addWidget(self.glwidget)
-        # scroll_layout.addWidget(self.glwidget_goal)
-
-        # scroll_area.setWidget(scroll_widget)
-        # self.scroll_area.setWidget(self.glwidget)
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll_area.setWidgetResizable(True)
 
@@ -41,7 +32,6 @@ class ScrollWidget(QWidget):
         width = self.width()
         height = self.height()
 
-        print(f'Scroll Size {width} x {height}')
 
     def AddWidget(self):
         pass

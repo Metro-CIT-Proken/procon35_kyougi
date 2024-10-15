@@ -9,7 +9,6 @@ class DoubleWidget(QWidget):
         super().__init__(parent)
         self.op_idx = 0
 
-        # self.is_focus = False
         self.start_board = start_board
         self.goal_board = goal_board
         self.post_button = QPushButton("POST",self)
@@ -24,7 +23,6 @@ class DoubleWidget(QWidget):
         self.slider.setMaximum(self.answer_num)
         self.slider.setTickInterval(1)
         self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
-        # self.slider.valueChanged.connect(self.onSliderChange)
 
 
 
@@ -46,12 +44,9 @@ class DoubleWidget(QWidget):
         self.setLayout(layout)
         self.setMinimumSize(0, 600)
         self.setMaximumSize(1000,1000)
-        print(f"double widget size: height:{self.height()} width:{self.width()}")
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
 
-    def resizeGL(self,width,height):
-        print(f"double widget size: height:{height} width:{width}")
 
     def post(self):
         Post(self.answer_file, self.config)
@@ -59,9 +54,6 @@ class DoubleWidget(QWidget):
     def paintEvent(self, event):
         self.effort_label.setText(f"手数 {self.answer_num }現在 {self.op_idx} 手目 あと {self.answer_num-self.op_idx}")
         self.slider.setMaximum(self.answer_num)
-
-    # def onSliderChange(self, value):
-    #     self.op_idx = value
 
 
 
