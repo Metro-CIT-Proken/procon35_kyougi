@@ -125,6 +125,9 @@ class MainWidget(QWidget):
             self.token_line.setText(self.config.token)
             self.token_line.textEdited.connect(self.config.token_edited)
             self.get_button = QPushButton("GET",self)
+            self.message = QLabel()
+            self.message.setFixedSize(300,300)
+            self.message.setWordWrap(True)
             # self.post_button = QPushButton("POST",self)
 
 
@@ -159,6 +162,7 @@ class MainWidget(QWidget):
 
 
 
+
             self.get_button.clicked.connect(self.get)
             # self.post_button.clicked.connect(self.post)
 
@@ -166,6 +170,7 @@ class MainWidget(QWidget):
             layout_cont.addLayout(layout_button)
 
             layout_button.addWidget(self.get_button)
+            layout_cont.addWidget(self.message)
             # layout_button.addWidget(self.post_button)
 
             if "answer" in self.glwidget_info  :
@@ -460,10 +465,22 @@ class MainWidget(QWidget):
 
 
     def get(self):
-        if not(self.one_get):
+        # if not(self.one_get):
+
             self.get_pro = Get(self.config)
 
             if self.get_pro.status_code== 200:
+
+
+                self.message.setText("取得成功です")
+                if self.one_get:
+                    for widget in self.widgets_list:
+                        print(000)
+                        print(id(widget["double_widget"]))
+                        self.scroll_area.scroll_area_layout.removeWidget(widget["double_widget"])
+                        widget["double_widget"].deleteLater()
+                    self.widgets_list = []
+
                 op_idx = 0
                 print("status 200")
                 self.widgets_list.append({})
@@ -595,17 +612,38 @@ class MainWidget(QWidget):
                     self.one_get = True
 
 
-
+                self.container_widget.setLayout(self.container_layout)
+                self.scroll_area.scroll_area.setWidget(self.container_widget)
                 self.fixed_form_num = self.get_pro.fixed_form_num
 
 
-                self.fixed_form_numbers = self.get_pro.fixed_form_numbers                # self.widgets_list[0]["fixed_form_numbers"] = fixed_form_numbers
-                self.fixed_form_widths = self.get_pro.fixed_form_widths                # self.widgets_list[0]["fixed_form_widths"] = fixed_form_widths
+                self.fixed_form_numbers = self.get_pro.fixed_form_numbers
+                self.fixed_form_widths = self.get_pro.fixed_form_widths
 
-                self.fixed_form_heights = self.get_pro.fixed_form_heights                # self.widgets_list[0]["fixed_form_heights"] = fixed_form_heights
 
-            self.container_widget.setLayout(self.container_layout)
-            self.scroll_area.scroll_area.setWidget(self.container_widget)
+                print("widgets_list")
+                print("---------------------------")
+                print(self.widgets_list)
+
+                self.fixed_form_heights = self.get_pro.fixed_form_heights
+            elif self.get_pro.status_code == 400:
+                self.message.setText("Error 400: リクエストの内容が不十分です")
+                return
+            elif self.get_pro.status_code == 401:
+                self.message.setText("Error 401: トークンが未取得もしくは不正です")
+                return
+
+            elif self.get_pro.status_code == 403:
+                self.message.setText("Error 403: 競技時間外です")
+                return
+
+            else:
+                if self.get_pro.error != "":
+                    self.message.setText(f"Error: {self.get_pro.error}")
+                    return
+
+            # self.container_widget.setLayout(self.container_layout)
+            # self.scroll_area.scroll_area.setWidget(self.container_widget)
 
 
 

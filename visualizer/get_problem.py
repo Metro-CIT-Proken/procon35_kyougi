@@ -9,6 +9,7 @@ class Get():
         self.board_width = 0
         self.board_height = 0
         self.status_code = 0
+        self.error = ""
         self.main()
 
 
@@ -45,10 +46,10 @@ class Get():
                 print("トークンが未取得もしくは不正です")
             elif response.status_code == 403:
                 print("競技時間外です")
-                exit(1)
             else:
                 print("Failed with status code:",response.status_code)
                 return 1
         except requests.exceptions.RequestException as e :
             print('Error',e)
-            exit(1)
+            self.error = e
+            # exit(1)

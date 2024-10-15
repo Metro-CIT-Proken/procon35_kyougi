@@ -11,10 +11,10 @@ class ScrollWidget(QWidget):
     def __init__(self,parent=None):
         super().__init__(parent)
         # self.glwidget_goal = glwidget_goal
-        scroll_area_layout = QVBoxLayout(self)
+        self.scroll_area_layout = QVBoxLayout(self)
         self.scroll_area = CustomScrollArea()
         print(f'scroll size: {self.scroll_area}')
-        scroll_area_layout.addWidget(self.scroll_area)
+        self.scroll_area_layout.addWidget(self.scroll_area)
         # scroll_widget = QWidget()
 
         # scroll_layout = QHBoxLayout(scroll_widget)
