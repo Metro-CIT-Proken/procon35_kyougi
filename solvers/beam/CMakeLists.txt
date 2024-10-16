@@ -4,6 +4,10 @@ enable_testing()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mbmi2 -mbmi -mabm -std=c++23 -O3")
 
+# TBB
+find_package(TBB REQUIRED)
+message(STATUS "Found 'TBB library' ${TBB_VERSION} ${TBB_LIBRARIES}")
+
 add_subdirectory(libs/json)
 add_subdirectory(libs/acutest)
 include_directories(libs/acutest/include)
@@ -19,6 +23,7 @@ add_executable(solver
     src/LineCountSolver.cpp
 )
 target_link_libraries(solver PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(solver PRIVATE TBB::tbb)
 
 # tests
 add_executable(test_board test/test_board.cpp src/board.cpp)
