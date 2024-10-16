@@ -82,7 +82,7 @@ Board Board_bitboard::toBoard(const Problem &prob) const {
 }
 
 void Board_bitboard::advance(const Stencil_bitboard &stenc, int x, int y, int s) {
-    assert(s != 0 && s != 1);
+    // assert(s != 0 && s != 1);
     
     int y_start = std::max(0, y),
         y_end   = std::min(stenc.prob->height, y + stenc.height);

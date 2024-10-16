@@ -12,16 +12,14 @@
 
 本選までにやることリスト：
 ・盤面の回転
-・問題生成のプログラム更新
 
 （可能なら）
-・マルチコアによる並列化
 ・chokudaiサーチのメモリ使用量固定
 
 */
 
 int main(int argc, char **argv) {
-    std::cout << argv[1] << std::endl;
+    std::cerr << argv[1] << std::endl;
     std::ifstream f(argv[1]);
     auto prob = Problem::fromJson(f, false);
     std::vector<Action> answer;
@@ -51,8 +49,5 @@ int main(int argc, char **argv) {
     }
 
     std::cerr << "answer ops " << answer.size() << std::endl;
-    std::ofstream output("answer.json");
-    output << answer_json.dump(2);
-
     std::cout << answer_json.dump() << std::endl;
 }

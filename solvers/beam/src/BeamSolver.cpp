@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <mutex>
 
+#include <tbb/global_control.h>
 #include <tbb/task.h>
 #include <tbb/parallel_sort.h>
 #include <tbb/parallel_for_each.h>
@@ -191,8 +192,8 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
             this,
             &q, &next_q, &eval_max, &eval_depth_max, &mutex_complete_state, &complete_state, &mutex_eval_depth_max,
             bprob, prob, di
-        ] (BeamState s) {
-            auto thread = tbb::this_task_arena::current_thread_index();
+        ] (const BeamState &s) {
+            const auto thread = tbb::this_task_arena::current_thread_index();
             auto now_state = std::make_shared<BeamState>(s);
 
             // 盤面が省略されているなら生成する
@@ -209,9 +210,9 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
                 // 抜き型が有効なすべての位置を列挙する
                 auto acts = prob.stencils.at(it_p->first).legalActions();
                 for(auto it_act = acts.begin(); it_act != acts.end(); it_act++) {
-                    if(tbb::is_current_task_group_canceling()) {
-                        return;
-                    }
+                    // if(tbb::is_current_task_group_canceling()) {
+                    //     return;
+                    // }
 
                     // 行で揃えてるので左右の抜き型だけやる
                     if(it_act->s != StencilDirection::LEFT &&
@@ -231,10 +232,10 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
                     int eval = evaluateBoard(bprob, *new_board);
                     BeamState new_state(nullptr, eval, it_p->first, it_act->x, it_act->y, it_act->s, now_state);
 
-                    // {
-                    //     std::lock_guard<SpinMutex> guard(mutex_eval_depth_max);
-                    //     eval_depth_max = std::max(eval_depth_max, eval);
-                    // }
+                    {
+                        std::lock_guard<SpinMutex> guard(mutex_eval_depth_max);
+                        eval_depth_max = std::max(eval_depth_max, eval);
+                    }
                     
                     // 盤面が完成しているかどうか判定する
                     if(eval != prob.width * prob.height * 1000000) {
@@ -278,6 +279,7 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
         answer.push_back({cur_state->p, cur_state->x, cur_state->y, cur_state->s});
         cur_state = cur_state->prevState;
     }
+    std::reverse(answer.begin(), answer.end());
 
     return answer;
 }

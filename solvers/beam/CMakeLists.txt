@@ -25,6 +25,13 @@ add_executable(solver
 target_link_libraries(solver PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(solver PRIVATE TBB::tbb)
 
+add_executable(solver_simple
+    src/main_SimpleSolver.cpp 
+    src/board.cpp
+    src/SimpleSolver.cpp
+)
+target_link_libraries(solver_simple PRIVATE nlohmann_json::nlohmann_json)
+
 # tests
 add_executable(test_board test/test_board.cpp src/board.cpp)
 target_link_libraries(test_board PRIVATE nlohmann_json::nlohmann_json)
