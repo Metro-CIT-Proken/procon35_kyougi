@@ -29,16 +29,47 @@ class MainWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.args = sys.argv
+        self.aflag = False
+        self.sflag = False
+        # try:
+        #     arg2 = self.args[1]
+        # except:
+        #     print("引数が足りません")
+        #     exit(1)
+        # self.answers_list = [None,]
+        # with open(self.args[1]) as f:
+        #     answer = json.load(f)[]
+        self.arg_list = [False,False,False]
+        # for _ in range(1,5):
+        #     self.answers_list.append(answer)
+        self.answers_list = [None, ]
+        for i in self.args:
+            if i == "a":
+                break
+            if i  == "s":
+                self.sflag = True
+
+
         try:
-            arg2 = self.args[1]
+            arg = self.args[1]
+            self.arg_list[0] = True
+            with open(arg) as file:
+                self.problem = json.load(file)
+
         except:
-            print("引数が足りません")
-            exit(1)
-        self.answers_list = [None,]
-        with open(self.args[1]) as f:
-            answer = json.load(f)
-        for _ in range(1,5):
-            self.answers_list.append(answer)
+            pass
+
+        try:
+            arg = self.args[2]
+            self.arg_list[1] = True
+            with open(arg) as file:
+                self.file_answer = json.load(file)
+        except:
+            pass
+
+
+
+
 
 
         self.container_layout = QVBoxLayout()
@@ -102,31 +133,31 @@ class MainWidget(QWidget):
 
         layout_cont.addWidget(self.painter_text)
         self.error_label = QLabel("")
-        self.s_flag = True
+        # self.s_flag = True
 
-        try:
-                self.args[3]
-        except IndexError:
-                self.args.append("")
-                self.s_flag = False
+        # try:
+        #         self.args[3]
+        # except IndexError:
+        #         self.args.append("")
+        #         self.s_flag = False
 
 
-        if(self.args[2] == "a"):
-            self.ip_address_line = QLineEdit(self)
-            self.ip_address_line.setText(self.config.ip_address)
+        # if(self.aflag):
+        self.ip_address_line = QLineEdit(self)
+        self.ip_address_line.setText(self.config.ip_address)
 
-            self.ip_address_line.textEdited.connect(self.config.ip_address_edited)
-            self.port_line = QLineEdit(self)
-            self.port_line.setText(str(self.config.port))
-            self.port_line.textEdited.connect(self.config.port_edited)
+        self.ip_address_line.textEdited.connect(self.config.ip_address_edited)
+        self.port_line = QLineEdit(self)
+        self.port_line.setText(str(self.config.port))
+        self.port_line.textEdited.connect(self.config.port_edited)
 
-            self.token_line = QLineEdit(self)
-            self.token_line.setText(self.config.token)
-            self.token_line.textEdited.connect(self.config.token_edited)
-            self.get_button = QPushButton("GET",self)
-            self.message = QLabel()
-            self.message.setFixedSize(300,100)
-            self.message.setWordWrap(True)
+        self.token_line = QLineEdit(self)
+        self.token_line.setText(self.config.token)
+        self.token_line.textEdited.connect(self.config.token_edited)
+        self.get_button = QPushButton("GET",self)
+        self.message = QLabel()
+        self.message.setFixedSize(300,100)
+        self.message.setWordWrap(True)
 
 
 
@@ -139,39 +170,39 @@ class MainWidget(QWidget):
         self.scroll_area.scroll_area.verticalScrollBar().valueChanged.connect(self.update_gl_on_scroll)
         self.scroll_area.scroll_area.horizontalScrollBar().valueChanged.connect(self.update_gl_on_scroll)
         self.error = 0
-        if self.args[2] == "a":#自動で移動する場合
-            ip_address_label = QLabel("IPアドレス")
-            ip_address_label.setFixedSize(100,20)
+        # if self.args[2] == "a":#自動で移動する場合
+        ip_address_label = QLabel("IPアドレス")
+        ip_address_label.setFixedSize(100,20)
 
-            port_label = QLabel("ポート番号")
-            port_label.setFixedSize(100,20)
+        port_label = QLabel("ポート番号")
+        port_label.setFixedSize(100,20)
 
-            token_label = QLabel("トークン")
-            token_label.setFixedSize(100,20)
+        token_label = QLabel("トークン")
+        token_label.setFixedSize(100,20)
 
-            layout_text = QVBoxLayout()
-            layout_cont.addLayout(layout_text)
-            layout_text.addWidget(ip_address_label)
-            layout_text.addWidget(self.ip_address_line)
-            layout_text.addWidget(port_label)
-            layout_text.addWidget(self.port_line)
-            layout_text.addWidget(token_label)
-            layout_text.addWidget(self.token_line)
-
-
+        layout_text = QVBoxLayout()
+        layout_cont.addLayout(layout_text)
+        layout_text.addWidget(ip_address_label)
+        layout_text.addWidget(self.ip_address_line)
+        layout_text.addWidget(port_label)
+        layout_text.addWidget(self.port_line)
+        layout_text.addWidget(token_label)
+        layout_text.addWidget(self.token_line)
 
 
-            self.get_button.clicked.connect(self.get)
+
+
+        self.get_button.clicked.connect(self.get)
             # self.post_button.clicked.connect(self.post)
 
-            layout_button = QHBoxLayout()
-            layout_cont.addLayout(layout_button)
+        layout_button = QHBoxLayout()
+        layout_cont.addLayout(layout_button)
 
-            layout_button.addWidget(self.get_button)
-            layout_cont.addWidget(self.message)
+        layout_button.addWidget(self.get_button)
+        layout_cont.addWidget(self.message)
             # layout_button.addWidget(self.post_button)
 
-            if "answer" in self.glwidget_info  :
+        if "answer" in self.glwidget_info  :
                 self.slider = QSlider(Qt.Orientation.Horizontal)
                 self.slider.setMinimum(0)
                 self.slider.setMaximum(self.glwidget_info["answer"]["n"])
@@ -210,12 +241,12 @@ class MainWidget(QWidget):
 
 
     def keyPressEvent(self, event: QKeyEvent):
-        if self.args[2] == "a":
+        # if self.args[2] == "a":
 
-            if event.key() == Qt.Key.Key_Right and not(self.op_idx == self.answer_num):
+        if event.key() == Qt.Key.Key_Right and not(self.op_idx == self.answer_num):
                 self.right_key_check = self.applyOn(self.op_idx+1)
             #左キーに進むと一手戻る
-            elif event.key() == Qt.Key.Key_Left and not(self.op_idx == 0):
+        elif event.key() == Qt.Key.Key_Left and not(self.op_idx == 0):
                 self.right_key_check = self.applyOn(self.op_idx-1)
 
         if event.key() == Qt.Key.Key_W:#Wキーが押された場合
@@ -512,7 +543,7 @@ class MainWidget(QWidget):
                     #     first_start_gl = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, None, self)
                     #     self.widgets_list[0]["start_widget"] = first_start_gl
                     # else:
-                    first_start_gl = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.s_flag, self)
+                    first_start_gl = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.sflag, self)
                     self.widgets_list[0]["start_widget"] = first_start_gl
                     first_goal_gl = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, None, None, False, self)
                     self.widgets_list[0]["goal_widget"] = first_goal_gl
@@ -562,12 +593,9 @@ class MainWidget(QWidget):
                     goal_board =  [row[:] for row in self.get_pro.goal_board]
                     self.widgets_list[i+1]["goal_board"] = goal_board
 
-                    # if not(self.s_flag):
-                    #     start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, None, self)
-                    #     self.widgets_list[i+1]["start_widget"] = start_gl_board
-                    #     start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
-                    # else:
-                    start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.s_flag, self)
+
+    
+                    start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.sflag, self)
                     self.widgets_list[i+1]["start_widget"] = start_gl_board
                     start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
                     # self.start_widgets_list.append(start_gl_board)
@@ -593,14 +621,14 @@ class MainWidget(QWidget):
 
 
 
-                    self.glwidget = self.widgets_list[0]["start_widget"]
-                    self.glwidget_goal = self.widgets_list[0]["goal_widget"]
-                    self.double_widget = self.widgets_list[0]["double_widget"]
+                self.glwidget = self.widgets_list[0]["start_widget"]
+                self.glwidget_goal = self.widgets_list[0]["goal_widget"]
+                self.double_widget = self.widgets_list[0]["double_widget"]
                     # self.op_idx = 0
-                    self.dis_board = self.widgets_list[0]["dis_board"]
-                    self.answer_num = self.widgets_list[0]["answer"]["n"]
+                self.dis_board = self.widgets_list[0]["dis_board"]
+                self.answer_num = self.widgets_list[0]["answer"]["n"]
 
-                    self.one_get = True
+                self.one_get = True
 
 
                 self.container_widget.setLayout(self.container_layout)
@@ -614,24 +642,191 @@ class MainWidget(QWidget):
 
 
                 self.fixed_form_heights = self.get_pro.fixed_form_heights
-            elif self.get_pro.status_code == 400:
-                self.message.setText("Error 400: リクエストの内容が不十分です")
-                return
-            elif self.get_pro.status_code == 401:
-                self.message.setText("Error 401: トークンが未取得もしくは不正です")
-                return
+                self.fixed_form_cells = self.get_pro.fixed_form_cells
 
-            elif self.get_pro.status_code == 403:
-                self.message.setText("Error 403: 競技時間外です")
-                return
+
+
+
+
+
+
+
+
+
+
 
             else:
-                if self.get_pro.error != "":
-                    self.message.setText(f"Error: {self.get_pro.error}")
+
+
+                print(self.args[2])
+
+                print(self.arg_list[0])
+                print(self.arg_list[1])
+                if self.arg_list[0]:
+
+                    self.widgets_list.append({})
+                    zoom = 1
+                    self.widgets_list[0]["zoom"] = zoom
+                    zoom_direction = 0
+                    self.widgets_list[0]["zoom_direction"] = zoom_direction
+                    board_width = self.problem['board']['width']
+                    board_height = self.problem['board']['height']
+                    start_board = [[ int(self.problem['board']['start'][y][x]) for x in range(board_width)]for y in range(board_height)]
+                    goal_board = [[ int(self.problem['board']['goal'][y][x]) for x in range(board_width)]for y in range(board_height)]
+
+                    # start_board = [row[:] for row in start_board]
+
+
+
+
+                    # goal_board = [row[:] for row in goal_board]
+
+                    b_wid = board_width
+                    b_hei = board_height
+
+                    self.widgets_list[0]["board_width"] = b_wid
+                    self.widgets_list[0]["board_height"] = b_hei
+
+
+                    dis_board = [[0 for _ in range(b_wid)]for _ in range(b_hei)]
+                    self.widgets_list[0]["dis_board"] = dis_board
+
+                    self.widgets_list[0]["answer"] = {
+                                                            "n": 0,
+                                                            "ops": [
+                                                            ]
+                                                    }
+
+                    # self.widgets_list[0]["answer_num"] = self.widgets_list[0]["answer"]["n"]
+
+
+
+                    if start_board != [[]] or goal_board != [[]]:
+                        first_start_gl = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.sflag, self)
+                        self.widgets_list[0]["start_widget"] = first_start_gl
+                        first_goal_gl = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, None, None, False, self)
+                        self.widgets_list[0]["goal_widget"] = first_goal_gl
+
+                        first_double_widget = FirstDoubleWidget(first_start_gl, first_goal_gl)
+                        first_double_widget.op_idx = 0
+                        self.widgets_list[0]["double_widget"] = first_double_widget
+                        self.widgets_list[0]["double_widget"].answer_num = 0
+                        self.answer_num = 0
+                        self.first_gl_layout.addWidget(first_double_widget)
+
+
+
+
+
+
+
+
+
+
+                if self.arg_list[1]:
+                    print("zzzzzzzzzzzzzzzzzzzz")
+
+                    self.widgets_list.append({})
+                    zoom = 1
+                    zoom_direction = 0
+
+                    self.widgets_list[1]["zoom"] = zoom
+                    self.widgets_list[1]["zoom_direction"] = zoom_direction
+
+
+                    self.op_idx = 0
+
+                    self.widgets_list[1]["board_width"] = b_wid
+
+                    next_pos = b_wid*CELL_SIZE+100
+                    self.widgets_list[1]["next_pos"] = next_pos
+
+                    self.widgets_list[1]["board_height"] = b_hei
+
+
+                    self.widgets_list[1]["answer"] = self.file_answer
+                    print(self.file_answer)
+
+
+                    dis_board = [[0 for _ in range(b_wid)]for _ in range(b_hei)]
+                    self.widgets_list[1]["dis_board"] = dis_board
+
+                    # start_board = [row[:] for row in self.get_pro.start_board]
+                    self.widgets_list[1]["start_board"] = start_board
+                    print(len(start_board))
+                    print(len(start_board[0]))
+                    print(len(goal_board))
+                    print(len(goal_board[0]))
+
+                    # goal_board =  [row[:] for row in self.get_pro.goal_board]
+                    self.widgets_list[1]["goal_board"] = goal_board
+
+                    start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.sflag, self)
+                    self.widgets_list[1]["start_widget"] = start_gl_board
+                    start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
+                    # self.start_widgets_list.append(start_gl_board)
+                    goal_gl_board = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, self)
+                    self.widgets_list[1]["goal_widget"] = goal_gl_board
+
+
+
+                    answer = self.args[2]
+                    config = self.config
+
+                    double_widget = DoubleWidget(start_gl_board, goal_gl_board, answer, config)
+                    double_widget.slider.valueChanged.connect(self.SliderChange)
+                    double_widget.op_idx = 0
+                    double_widget.answer_num = self.widgets_list[1]["answer"]["n"]
+                    self.widgets_list[1]["double_widget"] = double_widget
+
+
+
+
+
+                    self.container_layout.addWidget(double_widget)
+
+                self.glwidget = self.widgets_list[0]["start_widget"]
+                self.glwidget_goal = self.widgets_list[0]["goal_widget"]
+                self.double_widget = self.widgets_list[0]["double_widget"]
+                    # self.op_idx = 0
+                self.dis_board = self.widgets_list[0]["dis_board"]
+                self.answer_num = self.widgets_list[0]["answer"]["n"]
+
+                self.one_get = True
+
+
+                self.container_widget.setLayout(self.container_layout)
+                self.scroll_area.scroll_area.setWidget(self.container_widget)
+                self.fixed_form_num = self.problem['general']['n']
+
+
+                self.fixed_form_numbers =[ self.problem['general']['patterns'][x]['p'] for x in range(self.fixed_form_num)]
+                self.fixed_form_widths = self.fixed_form_widths = { self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['width'] for x in range(self.fixed_form_num)}
+
+
+
+                self.fixed_form_heights = {self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['height'] for x in range(self.fixed_form_num)}
+                self.fixed_form_cells = {self.fixed_form_numbers[x] : [ [self.problem['general']['patterns'][x]['cells'][i][j] for
+                                j in range(len(self.problem['general']['patterns'][x]['cells'][i]))]for i in range(len(self.problem['general']['patterns'][x]['cells'])) ]
+                            for x in range(self.fixed_form_num)}
+
+
+                if self.get_pro.status_code == 400:
+                    self.message.setText("Error 400: リクエストの内容が不十分です")
+                    return
+                elif self.get_pro.status_code == 401:
+                    self.message.setText("Error 401: トークンが未取得もしくは不正です")
                     return
 
-            # self.container_widget.setLayout(self.container_layout)
-            # self.scroll_area.scroll_area.setWidget(self.container_widget)
+                elif self.get_pro.status_code == 403:
+                    self.message.setText("Error 403: 競技時間外です")
+                    return
+
+                else:
+                    if self.get_pro.error != "":
+                        self.message.setText(f"Error: {self.get_pro.error}")
+                        return
+
 
 
 
