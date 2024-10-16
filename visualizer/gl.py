@@ -39,11 +39,7 @@ class OpenGLWidget(QOpenGLWidget):
         self.zoomy = 0
         self.xtext_int = xtext_int
         self.ytext_int = ytext_int
-        # self.is_focus = False
-        # self.answer = answer
-        # self.op_idx = op_idx
         self.yazirusi = ""
-        # self.args = args
         self.fournflag = fournflag
         self.is_focus = False
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
@@ -59,17 +55,20 @@ class OpenGLWidget(QOpenGLWidget):
 
     def generate_char_texture(self, char):
         img = np.zeros((64, 64, 4), dtype=np.uint8)
-        cv2.putText(img, char, (32, 32), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255, 255, 255, 255),  lineType=cv2.LINE_AA)
-
-        cv2.imwrite('img.png',img)
-        cv2.imshow('img.png',img)
-        height,width, _ = img.shape
         # img = cv2.flip(img,0)
+        bgr_img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)
+        bgr_img = cv2.putText(bgr_img, char, (32, 32), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255, 255, 255),  lineType=cv2.LINE_AA)
+        out_img =  cv2.cvtColor(bgr_img,cv2.COLOR_BGR2RGBA)
 
+        for i in range(img.shape[0]):
+            for j in range(img.shape[1]):
+                if np.all(out_img[i, j, :3] == (0, 0, 0)):
+                    out_img[i, j, 3] = 0
 
+        height,width, _ = img.shape
+        glEnable(GL_TEXTURE_2D)
         texture_id = glGenTextures(1)
-        # glBindTexture(GL_TEXTURE_2D, texture_id)
-
+        glBindTexture(GL_TEXTURE_2D, texture_id)
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
@@ -77,70 +76,23 @@ class OpenGLWidget(QOpenGLWidget):
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
     # OpenGLにテクスチャデータとして画像を送信
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, img)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, out_img)
 
 
         self.textures[char] = texture_id
-        print(self.textures)
-        # cv2.imwrite('img.png',img)
-        # cv2.imshow("", img)
-        # pass
-        # self.textures[char] = textures_id
-
-    def write_text(self, r, g, b, w, h, string):
-        pass
-        # # 初期化
-        # img = np.zeros((132, 128, 3), dtype=np.uint8)
-
-        # # 文字列を画像に描画 (BGR ではなく、最初からRGBで描画)
-        # cv2.putText(img, string, (60, 70), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255, 255, 255), thickness=1, lineType=cv2.LINE_AA)
-
-        # # カラー変換を削除して最初からRGBで処理する
-        # img = cv2.flip(img, 0)
-
-        # # OpenGL描画位置設定
-        # glRasterPos2f(w, h)
-
-        # # OpenGL描画時の色設定
-        # glColor3f(0.0, 0.0, 0.0)
-
-        # # 指定の色で置換 (np.whereは非効率なので、画像全体に対して高速処理)
-        # target_color = (0, 0, 0)
-        # change_color = (r, g, b)
-
-        # # 遅いnp.whereの代わりに、numpyの直接操作で色を変更
-        # mask = np.all(img == target_color, axis=-1)
-        # img[mask] = change_color
-
-        # # gltexture
-
-        # # OpenGLにピクセルを描画
-        # glDrawPixels(img.shape[1], img.shape[0], GL_RGB, GL_UNSIGNED_BYTE, img)
 
 
-    # def write_text(self,r,g,b,w,h,string):#,r,g,b,w,h
-    #     img = np.zeros((132,128,3),dtype=np.uint8)
-    #     cv2.putText(img,string, (60, 70), cv2.FONT_HERSHEY_DUPLEX, 1.0, (255,255,255))
-    #     img = cv2.flip(img, 0)
-    #     img= cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-    #     glRasterPos2f(w,h)
-    #     glColor3f(0.0, 0.0, 0.0)
-    #     target_color = (0, 0, 0)
-    #     change_color = (r, g, b)
-    #     img = np.where(img == target_color, change_color, (255, 255, 255))
-    #     glDrawPixels(img.shape[1], img.shape[0], GL_RGB,GL_UNSIGNED_BYTE, img)
+
 
 
     def initializeGL(self):
         glClearColor(1.0,1.0,1.0,1.0)
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable(GL_DEPTH_TEST)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glGenerateMipmap(GL_TEXTURE_2D)
-        glEnable(GL_CULL_FACE)  # バックフェースカリングを有効化
-        glCullFace(GL_BACK)     # 裏面をスキップ
+        # glEnable(GL_DEPTH_TEST)
+        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        # glGenerateMipmap(GL_TEXTURE_2D)
+        # glEnable(GL_CULL_FACE)  # バックフェースカリングを有効化
+        # glCullFace(GL_BACK)     # 裏面をスキップ
 
 
     def hsv_to_rgb(self,h,s,v):
@@ -229,62 +181,35 @@ class OpenGLWidget(QOpenGLWidget):
                 glVertex2f(first+(j*s),first+((i+1)*s))
         glEnd()
 
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_TEXTURE_2D)
         for i in range(height_square):
             for j in range(width_square):
-                print("aaaaaaaa")
                 glBindTexture(GL_TEXTURE_2D, self.textures[str(self.board[i][j])])
 
-                print("bbbbbbbbbb")
-                # if self.fournflag:
-                #     ratio = self.search_near_goal(j,i)/max(self.b_hei,self.b_wid)*3#距離が遠ければ色が薄くなり近くなれば濃くなる
-                #     saturation = 90*(1.0-ratio)
-                #     h,ss,v = color[self.board[i][j]]*60,int(saturation*255//100),255
-                #     r,g,b = self.hsv_to_rgb(h,ss,v)
-                #     r*=255
-                #     g*=255
-                #     b*=255
-                #     self.write_text(r,g,b,first+(j*s),first+(i*s),str(self.board[i][j]))
-                #     glRasterPos2f(0.0,0.0)
-
-
-                # elif self.board[i][j] == self.goal_board[i][j]:
-                #     self.write_text(167,87,168,first+(j*s),first+(i*s),str(self.board[i][j]))
-                #     glRasterPos2f(0.0,0.0)
-                # elif self.board[i][j] == 0:
-                #     self.write_text(255,0,0,first+(j*s),first+(i*s),'0')
-                #     glRasterPos2f(0.0,0.0)
-                # elif self.board[i][j] == 1:
-                #     self.write_text(0,0,255,first+(j*s),first+(i*s),'1')
-                #     glRasterPos2f(0.0,0.0)
-                # elif self.board[i][j] == 2:
-                #     self.write_text(0,255,0,first+(j*s),first+(i*s),'2')
-                #     glRasterPos2f(0.0,0.0)
-                # elif self.board[i][j] == 3:
-                #     self.write_text(255,255,0,first+(j*s),first+(i*s),'3')
-                #     glRasterPos2f(0.0,0.0)
                 glBegin(GL_QUADS)
-                glTexCoord2f(first+(j*s)+1,first+(i*s)+1)
-                glVertex2f(first+(j*s),first+(i*s))
+                glTexCoord2f(0, 1)
+                glVertex2f(first+(j*s), first+(i*s))
 
-                glTexCoord2f(first+((j+1)*s)+1,first+(i*s)+1)
-                glVertex2f(first+((j+1)*s),first+(i*s))
+                glTexCoord2f(1, 1)
+                glVertex2f(first+((j+1)*s), first+(i*s))
 
-                glTexCoord2f(first+((j+1)*s)+1,first+((i+1)*s)+1)
+                glTexCoord2f(1, 0)
                 glVertex2f(first+((j+1)*s),first+((i+1)*s))
 
-                glTexCoord2f(first+(j*s)+1,first+((i+1)*s)+1)
-                glVertex2f(first+(j*s),first+((i+1)*s))
+                glTexCoord2f(0, 0)
+                glVertex2f(first+(j*s), first+((i+1)*s))
                 glEnd()
         glDisable(GL_TEXTURE_2D)
         glLineWidth(3.0)
         glBegin(GL_LINES)
-        glVertex2f(0.5,0)
-        glVertex2f(0.5,1)
+        glVertex2f(0.5, 0)
+        glVertex2f(0.5, 1)
         glEnd()
         glBegin(GL_LINES)
-        glVertex2f(0,first+((round(height_square/2))*s))
-        glVertex2f(1,first+((round(height_square/2))*s))
+        glVertex2f(0, first+((round(height_square/2))*s))
+        glVertex2f(1, first+((round(height_square/2))*s))
         glEnd()
         glPopMatrix()
         glFlush()

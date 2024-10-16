@@ -20,21 +20,22 @@ class ScrollWidget(QWidget):
 
 
 
-        self.scroll_area.verticalScrollBar().valueChanged.connect(self.update_gl_on_scroll)
-        self.scroll_area.horizontalScrollBar().valueChanged.connect(self.update_gl_on_scroll)
+        # self.scroll_area.verticalScrollBar().valueChanged.connect(self.update_gl_on_scroll)
+        # self.scroll_area.horizontalScrollBar().valueChanged.connect(self.update_gl_on_scroll)
 
 
 
-    def update_gl_on_scroll(self,value):
-        self.update()
+    # def update_gl_on_scroll(self,value):
+    #     pass
+        # self.update()
 
-    def resizeEvent(self,event):
-        width = self.width()
-        height = self.height()
+    # def resizeEvent(self,event):
+    #     width = self.width()
+    #     height = self.height()
 
 
-    def AddWidget(self):
-        pass
+    # def AddWidget(self):
+    #     pass
 
 
 

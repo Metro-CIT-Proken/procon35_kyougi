@@ -204,9 +204,8 @@ class MainWidget(QWidget):
             self.answer_num = self.double_widget.answer_num
             self.dis_board = self.glwidget_info["dis_board"]
             self.board_width = self.glwidget_info["board_width"]
-            self.double_widget.update()
-            self.glwidget.update()
-        self.update()
+            # self.glwidget.update()
+        # self.update()
 
 
 
@@ -409,7 +408,6 @@ class MainWidget(QWidget):
         self.glwidget.board = start_board
         self.op_idx+=1
         self.double_widget.op_idx+=1
-        self.glwidget.update()
 
 
     #一手戻る
@@ -425,7 +423,7 @@ class MainWidget(QWidget):
             self.glwidget.board = start_board
             self.op_idx -= 1
             self.double_widget.op_idx-=1
-            self.glwidget.update()
+
 
 
 
@@ -586,7 +584,7 @@ class MainWidget(QWidget):
                     double_widget.op_idx = 0
                     double_widget.answer_num = self.widgets_list[i+1]["answer"]["n"]
                     self.widgets_list[i+1]["double_widget"] = double_widget
-                    double_widget.update()
+
 
 
 
@@ -656,7 +654,8 @@ class MainWidget(QWidget):
 
     def update_gl_on_scroll(self, value):
         for widget in self.widgets_list:
-            widget.update()
+            pass
+            # widget.update()
 
     def SliderChange(self, value):
         if self.double_widget != self.widgets_list[0]["double_widget"]:
