@@ -1,11 +1,12 @@
 import numpy as np
 import json
 import sys
+import copy
 
 from problem import Problem
 
-if len(sys.argv) < 3:
-    print("usage: %s <problem json> <answer json>" % sys.argv[0])
+if len(sys.argv) < 4:
+    print("usage: %s <problem json> <answer json> <output problem json>" % sys.argv[0])
     exit()
 
 problem_json = sys.argv[1]
@@ -16,7 +17,7 @@ with open(problem_json) as f:
 with open(answer_json) as f:
     answer = json.loads(f.read())
 
-board_test = problem.start
+board_test = copy.deepcopy(problem.start)
 ops = answer["ops"]
 for i in range(len(ops)):
     op = ops[i]
@@ -28,5 +29,5 @@ for i in range(len(ops)):
     stencil = problem.generals[p]
     board_test = stencil.apply(board_test, x, y, s)
 
-is_correct = np.all(board_test.board == problem.goal.board)
-print("correct" if is_correct else "incorrect")
+problem.goal = board_test
+json.dump(problem.to_json(),  open(sys.argv[3], "w"))
