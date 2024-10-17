@@ -4,6 +4,7 @@
 #include <array>
 #include <unordered_set>
 #include <mutex>
+#include <optional>
 
 #include <tbb/global_control.h>
 #include <tbb/task.h>
@@ -31,9 +32,10 @@ static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &boa
 {
     int eval = 0;
     bool end = false;
+    int eval_r = 0,
+        eval_l = 0;
     for(int y = 0; y < prob.prob->height; y++) {
-        int eval_r = 0,
-            eval_l = 0;
+        
         // for(int w = 0; w < board.wordsPerLine; w++) {
         //     auto &test_word = board.getWord(y, w),
         //         &goal_word  = prob.goal.getWord(y, w);
@@ -69,7 +71,7 @@ static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &boa
                 int sum_diff = 0;
                 std::array<int, 4> x_start;
                 std::fill(x_start.begin(), x_start.end(), x);
-                int x_end = std::min(x + 1 + 8, prob.width);
+                int x_end = std::min(x + 1 + 2, prob.width);
                 for(int tx = x; tx < x_end; tx++) {
                     int c = prob.goal.getCell(tx, y);
                     for(int sx = x_start[c]; sx < prob.width; sx++) {
@@ -149,14 +151,14 @@ static int evaluateBoard(const Problem_bitboard &prob, const Board_bitboard &boa
         //     eval_l += sum_diff;
         // }
 
-        // if(end) {
-        //     break;
-        // }
+        if(end) {
+            break;
+        }
 
-        eval += std::max(eval_r, eval_l);
+        //eval += std::max(eval_r, eval_l);
     }
 
-    return eval;
+    return eval_r;
 }
 
 std::vector<Action> BeamSolver::solve(const Problem &prob)
@@ -167,42 +169,49 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
     int concurrency = tbb::this_task_arena::max_concurrency();
 
     Problem_bitboard bprob(&prob);
-    std::vector<BeamState> q;
-    std::vector<std::vector<BeamState>> next_q(concurrency);
+    std::vector<std::vector<BeamState>> q(concurrency), next_q(concurrency);
     SpinMutex mutex_complete_state;
-    std::shared_ptr<BeamState> complete_state;
+    std::optional<AnswerIndex> completed_answer;
+    AnswerTree answer_tree(concurrency);
 
-    auto board_start = std::make_shared<Board_bitboard>(bprob.start);
-    q.emplace_back(board_start, 0, 0, 0, 0, StencilDirection::UP, nullptr);
-    int eval_max = -1;
+    std::vector<int> eval_depth_max(concurrency);
+
+    BeamState state_start(bprob.start, 0, AnswerSentinel);
+    q[0].push_back(state_start);
 
     // tbb::concurrent_unordered_set<Board_bitboard, Board_bitboard::hash> visited_nodes;
 
     // ビーム深さで探索する
     for(int di = 0; di < this->beamD; di++) {
-        SpinMutex mutex_eval_depth_max;
-        int eval_depth_max = -1;
+        std::fill(eval_depth_max.begin(), eval_depth_max.end(), 0);
 
-        if(q.size() > this->beamW) {
-            tbb::parallel_sort(q.begin(), q.end(), std::greater<BeamState>());
-            q.erase(q.begin() + this->beamW, q.end());
+        std::vector<std::pair<int, const BeamState *>> states;
+        for(int i = 0; i < concurrency; i++) {
+            for(int j = 0; j < q[i].size(); j++) {
+                states.emplace_back(q[i][j].eval, &q[i][j]);
+            }
         }
 
-        tbb::parallel_for_each(q.begin(), q.end(), [
-            this,
-            &q, &next_q, &eval_max, &eval_depth_max, &mutex_complete_state, &complete_state, &mutex_eval_depth_max,
-            bprob, prob, di
-        ] (const BeamState &s) {
-            const auto thread = tbb::this_task_arena::current_thread_index();
-            auto now_state = std::make_shared<BeamState>(s);
+        if(states.size() > this->beamW) {
+            tbb::parallel_sort(states.begin(), states.end(), std::greater<decltype(states)::value_type>());
+            states.erase(states.begin() + this->beamW, states.end());
+        }
 
-            // 盤面が省略されているなら生成する
-            if(!now_state->board) {
-                auto prev_state = now_state->prevState;
-                auto new_board = std::make_shared<Board_bitboard>(*prev_state->board);
-                new_board->advance(bprob.stencils.at(now_state->p), now_state->x, now_state->y, now_state->s);
-                now_state->board = new_board;
-            }
+        tbb::parallel_for_each(states.begin(), states.end(), [
+            this,
+            &q, &next_q, &eval_depth_max, &mutex_complete_state, &completed_answer,
+            &bprob, &prob, &di, &answer_tree
+        ] (const std::pair<int, const BeamState *> &s) {
+            const auto thread = tbb::this_task_arena::current_thread_index();
+            auto now_state = std::make_shared<BeamState>(*s.second);
+
+            // // 盤面が省略されているなら生成する
+            // if(!now_state->board) {
+            //     auto prev_state = now_state->prevState;
+            //     auto new_board = std::make_shared<Board_bitboard>(*prev_state->board);
+            //     new_board->advance(bprob.stencils.at(now_state->p), now_state->x, now_state->y, now_state->s);
+            //     now_state->board = new_board;
+            // }
 
             // すべての抜き型を試す
             for(auto it_p = bprob.stencils.begin(); it_p != bprob.stencils.end(); it_p++) {
@@ -221,21 +230,19 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
                     }
 
                     // 盤面をコピーして、次の盤面を生成する
-                    auto new_board = std::make_shared<Board_bitboard>(*now_state->board);
-                    new_board->advance(it_p->second, it_act->x, it_act->y, it_act->s);
+                    Board_bitboard new_board = now_state->board;
+                    new_board.advance(it_p->second, it_act->x, it_act->y, it_act->s);
 
                     // if(visited_nodes.count(*new_board)) {
                     //     continue;
                     // }
                     // visited_nodes.insert(*new_board);
 
-                    int eval = evaluateBoard(bprob, *new_board);
-                    BeamState new_state(nullptr, eval, it_p->first, it_act->x, it_act->y, it_act->s, now_state);
-
-                    {
-                        std::lock_guard<SpinMutex> guard(mutex_eval_depth_max);
-                        eval_depth_max = std::max(eval_depth_max, eval);
-                    }
+                    auto answer_index = answer_tree.add(thread, now_state->answer_index, 
+                        {it_p->first, it_act->x, it_act->y, it_act->s});
+                    int eval = evaluateBoard(bprob, new_board);
+                    BeamState new_state(new_board, eval, answer_index);
+                    eval_depth_max[thread] = std::max(eval_depth_max[thread], eval);
                     
                     // 盤面が完成しているかどうか判定する
                     if(eval != prob.width * prob.height * 1000000) {
@@ -249,8 +256,8 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
                         tbb::task::current_context()->cancel_group_execution();
                         {
                             std::lock_guard<SpinMutex> guard(mutex_complete_state);
-                            if(!complete_state) {
-                                complete_state = std::make_shared<BeamState>(new_state);
+                            if(!completed_answer) {
+                                completed_answer = new_state.answer_index;
                             }
                         }
 
@@ -260,28 +267,22 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
             }
         });
 
-        cerr << "depth " << di << " eval " << eval_depth_max << endl;
-
-        if(complete_state) {
+        if(completed_answer) {
             break;
         }
 
-        q.clear();
+        int eval_max = 0;
         for(int i = 0; i < concurrency; i++) {
-            q.insert(q.end(), next_q[i].begin(), next_q[i].end());
-            next_q[i].clear();
+            q[i].clear();
+            q[i].swap(next_q[i]);
+
+            eval_max = std::max(eval_max, eval_depth_max[i]);
         }
+
+        cerr << "depth " << di << " eval " << eval_max << endl;
     }
 
-    auto cur_state = complete_state;
-    std::vector<Action> answer;
-    while(cur_state->prevState != nullptr) {
-        answer.push_back({cur_state->p, cur_state->x, cur_state->y, cur_state->s});
-        cur_state = cur_state->prevState;
-    }
-    std::reverse(answer.begin(), answer.end());
-
-    return answer;
+    return answer_tree.build(completed_answer.value());
 }
 
 // std::vector<Action> BeamSolver::solve(const Problem &prob)

@@ -1,18 +1,19 @@
 #pragma once
 
 #include <memory>
+
 #include "bitboard.h"
 #include "solver.h"
+#include "AnswerTree.h"
 
-struct BeamState
+class BeamState
 {
 public:
-    BeamState() : p(-1)
-    {
-    }
 
-    BeamState(std::shared_ptr<Board_bitboard> board, int eval, int p, int x, int y, StencilDirection s, std::shared_ptr<BeamState> prevState) :
-        board(board), eval(eval), p(p), x(x), y(y), s(s), prevState(prevState)
+    BeamState(const Board_bitboard &_board, int const &eval, AnswerIndex const &answer_index) :
+        board(_board),
+        eval(eval),
+        answer_index(answer_index)
     {
     }
 
@@ -24,10 +25,10 @@ public:
         return this->eval > right.eval;
     }
 
-    std::shared_ptr<Board_bitboard> board;
-    int eval, p, x, y;
-    StencilDirection s;
-    std::shared_ptr<BeamState> prevState;
+    Board_bitboard board;
+    int eval;
+    AnswerIndex answer_index;
+    // std::shared_ptr<BeamState> prevState;
 };
 
 class BeamSolver : public SolverBase
@@ -44,19 +45,19 @@ public:
     int beamW, beamD;
 };
 
-class ChokudaiBeamSolver : public SolverBase
-{
-public:
-    ChokudaiBeamSolver(int width, int depth) :
-        beamW(width),
-        beamD(depth)
-    {
-    }
+// class ChokudaiBeamSolver : public SolverBase
+// {
+// public:
+//     ChokudaiBeamSolver(int width, int depth) :
+//         beamW(width),
+//         beamD(depth)
+//     {
+//     }
 
-    virtual std::vector<Action> solve(const Problem &prob);
+//     virtual std::vector<Action> solve(const Problem &prob);
 
-    int beamW, beamD;
-};
+//     int beamW, beamD;
+// };
 
 class InboundBeamSolver : public SolverBase
 {

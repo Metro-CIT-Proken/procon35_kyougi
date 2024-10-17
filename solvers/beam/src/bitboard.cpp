@@ -1,8 +1,8 @@
 #include <bit>
-#include <x86intrin.h>
 #include <functional>
 #include <assert.h>
 
+#include "pext.h"
 #include "bitboard.h"
 
 static inline WordType left_shift(WordType x, int s) {
