@@ -17,22 +17,11 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
     int count = 0;
     for (int l = 0; l < h; l++)
     {
-        std::vector<int> lans = {0, 0, 0, 0};
-        for (int i = 0; i < w; i++)
-        {
-            lans[sboard.cells[l][i]] += 1;
-            lans[gboard.cells[l][i]] -= 1;
-        }
-        for (int i = 0; i < 4; i++)
-        {
-            if (lans[i] > 0)
-                count += lans[i];
-        }
-        while (lans != std::vector<int>{0, 0, 0, 0})
+        while (true)
         {
             std::map<int, std::vector<std::pair<int, int>>> dic;
             std::vector<std::pair<int, std::pair<std::pair<int, int>, std::pair<int, int>>>> pic;
-            lans = std::vector<int>{0, 0, 0, 0};
+            std::vector<int> lans = {0, 0, 0, 0};
             for (int i = 0; i < w; i++)
             {
                 lans[sboard.cells[l][i]] += 1;
@@ -105,26 +94,15 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
             }
 
             std::sort(pic.begin(), pic.end());
-            // auto q = pic[0];
             auto chose = pic[0].second;
             int i, j;
             int I;
             std::tie(I, j) = chose.first;
             i = abs(I);
-            // std::cerr << "count " << pic[0].first << "i y " << I << " " << j << std::endl;
-
             std::bitset<8> biti(i - chose.second.first - 1);
-            // int get = sboard.cells[i][j];
-            // lans[sboard.cells[i][j]] += 1;
 
-            // for (auto q : pic)
-            // {
-            // std::cerr << q.first << " " << q.second.first.first << " " << q.second.first.second << std::endl;
-            // }
             auto q = pic[0];
 
-            // std::cerr << q.first << " " << q.second.first.first << " " << q.second.first.second << std::endl;
-            // std::cin.get();
             if (j != chose.second.second)
             {
                 int s = -1;
@@ -179,6 +157,7 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
                         ii -= stenc.height;
                     }
                 }
+                std::cerr << std::endl;
                 auto &stenc = prob.stencils.at(0);
                 sboard.advance(stenc, chose.second.second, chose.second.first, StencilDirection::UP);
                 act.push_back({stenc.id, chose.second.second, chose.second.first, StencilDirection::UP});
@@ -207,46 +186,21 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
                     }
                     s++;
                 }
-                for (auto q : sboard.cells)
-                {
-                    for (auto p : q)
-                        std::cerr << int(p) << "";
-                    std::cout << std::endl;
-                }
-                // std::bitset<8> bits(s);
+
+
                 auto &stenc = prob.stencils.at(3 * s);
-                std::cout << "s " << s << " " << stenc.height << std::endl;
                 sboard.advance(stenc, chose.second.second, i + y + 1 - stenc.height, StencilDirection::UP);
                 act.push_back({stenc.id, chose.second.second, i + y + 1 - stenc.height, StencilDirection::UP});
-                // for (auto q : sboard.cells)
-                // {
-                //     for (auto p : q)
-                //         std::cerr << int(p) << "";
-                //     std::cout << std::endl;
-                // }
-                // std::cout << "s " << s << std::endl;
+
                 auto &stenc2 = prob.stencils.at(3 * z);
                 sboard.advance(stenc2, chose.second.second, l + 1, StencilDirection::UP);
                 act.push_back({stenc2.id, chose.second.second, l + 1, StencilDirection::UP});
-                // for (auto q : sboard.cells)
-                // {
-                //     for (auto p : q)
-                //         std::cerr << int(p) << "";
-                //     std::cout << std::endl;
-                // }
-                // std::cout << "s " << s << std::endl;
+
                 auto &stenc3 = prob.stencils.at(0);
                 sboard.advance(stenc3, chose.second.second, chose.second.first, StencilDirection::UP);
                 act.push_back({stenc3.id, chose.second.second, chose.second.first, StencilDirection::UP});
-                // for (auto q : sboard.cells)
-                // {
-                //     for (auto p : q)
-                //         std::cerr << int(p) << "";
-                //     std::cout << std::endl;
-                // }
-                // std::cout << std::endl;
-                // std::cin.get();
-                std::cerr << "use y_lian_fast_seter " ;
+
+                std::cerr << "use y_lian_fast_seter ";
             }
             else
             {
@@ -264,3 +218,11 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
 // auto &stenc = prob.stencils.at(0);
 // sboard.advance(stenc, 3, 3, StencilDirection::DOWN);
 // act.push_back({stenc.id, 3, 3, StencilDirection::DOWN});
+
+// for (auto q : sboard.cells)
+// {
+//     for (auto p : q)
+//         std::cerr << int(p) << "";
+//     std::cerr << std::endl;
+// }
+// std::cerr << "s " << s << std::endl;
