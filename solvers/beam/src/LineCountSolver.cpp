@@ -63,17 +63,33 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
 
                                 int sizei = biti.count();
 
-                                if (l == 0)
+                                if (sizei >= 3)
                                 {
-                                    sizei = 0;
+                                    int y = 0;
+                                    int s = 0;
+                                    for (int x = 1; x < 257; x *= 2)
+                                    {
+                                        if (x >= i - l - 1)
+                                        {
+                                            y = h - x - l - 2;
+                                            // std::cerr << "x " << x << " y " << y << std::endl;
+                                            break;
+                                        }
+                                    }
+                                    // if (i - l - 1 + y > y)
+                                    // {
+                                    sizei = 2;
+                                    if (j != v.second)
+                                        sizei += 1;
+                                    if (a == -1 || a > sizei)
+                                    {
+                                        a = sizei;
+                                        // std::cerr << a << std::endl;
+                                        ij = {{-i, j}, v};
+                                    }
+                                    continue;
                                 }
-                                // if (sizei >= 3)
-                                // {
-                                //     if (sboard.height - l - 2 >= 2)
-                                //     {
-                                //         sizei = 2;
-                                //     }
-                                // }
+
                                 if (j != v.second)
                                     sizei += 1;
                                 if (a == -1 || a > sizei)
@@ -89,15 +105,26 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
             }
 
             std::sort(pic.begin(), pic.end());
-            auto q = pic[0];
-
+            // auto q = pic[0];
             auto chose = pic[0].second;
             int i, j;
-            std::tie(i, j) = chose.first;
-            std::bitset<8> biti(i - chose.second.first - 1);
-            int get = sboard.cells[i][j];
-            lans[sboard.cells[i][j]] += 1;
+            int I;
+            std::tie(I, j) = chose.first;
+            i = abs(I);
+            // std::cerr << "count " << pic[0].first << "i y " << I << " " << j << std::endl;
 
+            std::bitset<8> biti(i - chose.second.first - 1);
+            // int get = sboard.cells[i][j];
+            // lans[sboard.cells[i][j]] += 1;
+
+            // for (auto q : pic)
+            // {
+            // std::cerr << q.first << " " << q.second.first.first << " " << q.second.first.second << std::endl;
+            // }
+            auto q = pic[0];
+
+            // std::cerr << q.first << " " << q.second.first.first << " " << q.second.first.second << std::endl;
+            // std::cin.get();
             if (j != chose.second.second)
             {
                 int s = -1;
@@ -136,7 +163,7 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
                 }
             }
             int ii = i;
-            if (l != 0)
+            if (l != 0 && I > 0)
             {
                 for (int y = 0; y < 9; y++)
                 {
@@ -148,13 +175,78 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
 
                         sboard.advance(stenc, chose.second.second, ii - stenc.height, StencilDirection::UP);
                         act.push_back({stenc.id, chose.second.second, ii - stenc.height, StencilDirection::UP});
-                        std::cerr << "up " << stenc.height << " ";
+                        std::cout << "up " << stenc.height << " ";
                         ii -= stenc.height;
                     }
                 }
                 auto &stenc = prob.stencils.at(0);
                 sboard.advance(stenc, chose.second.second, chose.second.first, StencilDirection::UP);
                 act.push_back({stenc.id, chose.second.second, chose.second.first, StencilDirection::UP});
+            }
+            else if (I < 0)
+            {
+                i = std::abs(i);
+                int y = 0;
+                int s = 0;
+                int z = 0;
+                // int Z = 0;
+                for (int x = 1; x < 257; x *= 2)
+                {
+                    if (x >= i - l - 1)
+                    {
+                        y = h - x - l - 2;
+                        break;
+                    }
+                    z++;
+                }
+                for (int x = 1; x < 257; x *= 2)
+                {
+                    if (x >= y + 1)
+                    {
+                        break;
+                    }
+                    s++;
+                }
+                for (auto q : sboard.cells)
+                {
+                    for (auto p : q)
+                        std::cerr << int(p) << "";
+                    std::cout << std::endl;
+                }
+                // std::bitset<8> bits(s);
+                auto &stenc = prob.stencils.at(3 * s);
+                std::cout << "s " << s << " " << stenc.height << std::endl;
+                sboard.advance(stenc, chose.second.second, i + y + 1 - stenc.height, StencilDirection::UP);
+                act.push_back({stenc.id, chose.second.second, i + y + 1 - stenc.height, StencilDirection::UP});
+                // for (auto q : sboard.cells)
+                // {
+                //     for (auto p : q)
+                //         std::cerr << int(p) << "";
+                //     std::cout << std::endl;
+                // }
+                // std::cout << "s " << s << std::endl;
+                auto &stenc2 = prob.stencils.at(3 * z);
+                sboard.advance(stenc2, chose.second.second, l + 1, StencilDirection::UP);
+                act.push_back({stenc2.id, chose.second.second, l + 1, StencilDirection::UP});
+                // for (auto q : sboard.cells)
+                // {
+                //     for (auto p : q)
+                //         std::cerr << int(p) << "";
+                //     std::cout << std::endl;
+                // }
+                // std::cout << "s " << s << std::endl;
+                auto &stenc3 = prob.stencils.at(0);
+                sboard.advance(stenc3, chose.second.second, chose.second.first, StencilDirection::UP);
+                act.push_back({stenc3.id, chose.second.second, chose.second.first, StencilDirection::UP});
+                // for (auto q : sboard.cells)
+                // {
+                //     for (auto p : q)
+                //         std::cerr << int(p) << "";
+                //     std::cout << std::endl;
+                // }
+                // std::cout << std::endl;
+                // std::cin.get();
+                std::cerr << "use y_lian_fast_seter " ;
             }
             else
             {
