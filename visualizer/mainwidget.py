@@ -13,7 +13,7 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from scroll_widget import *
-
+from exec_solver import *
 
 
 
@@ -39,7 +39,7 @@ class MainWidget(QWidget):
         # self.answers_list = [None,]
         # with open(self.args[1]) as f:
         #     answer = json.load(f)[]
-        self.arg_list = [False,False,False]
+        self.arg_list = [False,False]
         # for _ in range(1,5):
         #     self.answers_list.append(answer)
         self.answers_list = [None, ]
@@ -52,18 +52,20 @@ class MainWidget(QWidget):
 
         try:
             arg = self.args[1]
-            self.arg_list[0] = True
-            with open(arg) as file:
-                self.problem = json.load(file)
+            if not (self.args[1] == 'a' or self.args[1] == 's'):
+                self.arg_list[0] = True
+                with open(arg) as file:
+                    self.problem = json.load(file)
 
         except:
             pass
 
         try:
             arg = self.args[2]
-            self.arg_list[1] = True
-            with open(arg) as file:
-                self.file_answer = json.load(file)
+            if not (self.args[2] == 'a' or self.args[2] == 's'):
+                self.arg_list[1] = True
+                with open(arg) as file:
+                    self.file_answer = json.load(file)
         except:
             pass
 
@@ -155,6 +157,12 @@ class MainWidget(QWidget):
         self.token_line.setText(self.config.token)
         self.token_line.textEdited.connect(self.config.token_edited)
         self.get_button = QPushButton("GET",self)
+
+
+        self.solver_layout = QVBoxLayout()
+        self.add_solver_button = QPushButton("ソルバーを追加する")
+        self.remove_solver_button = QPushButton("ソルバーを削除する")
+
         self.message = QLabel()
         self.message.setFixedSize(300,100)
         self.message.setWordWrap(True)
@@ -193,13 +201,24 @@ class MainWidget(QWidget):
 
 
         self.get_button.clicked.connect(self.get)
+        self.add_solver_button.clicked.connect(self.add_solver)
+        self.remove_solver_button.clicked.connect(self.remove_solver)
             # self.post_button.clicked.connect(self.post)
 
         layout_button = QHBoxLayout()
         layout_cont.addLayout(layout_button)
 
         layout_button.addWidget(self.get_button)
+        layout_cont.addLayout(self.solver_layout)
+        layout_cont.addWidget(self.add_solver_button)
+        layout_cont.addWidget(self.remove_solver_button)
         layout_cont.addWidget(self.message)
+
+        for solver in self.config.solvers:
+            text_solver = QLineEdit(solver)
+            self.solver_layout.addWidget(text_solver)
+
+
             # layout_button.addWidget(self.post_button)
 
         if "answer" in self.glwidget_info  :
@@ -485,16 +504,37 @@ class MainWidget(QWidget):
         super().resizeEvent(event)
 
     def closeEvent(self, event):
+        for i in range(self.solver_layout.count()):
+            item = self.solver_layout.itemAt(i)
+            if item.widget() and isinstance(item.widget(), QLineEdit):
+                self.config.solvers[i] = item.widget().text()
         self.config.save()
 
+    def on_answer_created(self, answer):
+        return answer
 
     def get(self):
         # if not(self.one_get):
-
-            self.get_pro = Get(self.config)
+            if self.arg_list[0]:
+                self.get_pro = GetByHand(self.problem)
+            else:
+                self.get_pro = Get(self.config)
 
             if self.get_pro.status_code== 200:
+                self.answers_list = [None, ]
+                if self.arg_list[1]:
+                    self.answers_list.append(self.file_answer)
+                else:
+                    for i in range(self.solver_layout.count()):
+                        item = self.solver_layout.itemAt(i)
+                        if item.widget() and isinstance(item.widget(), QLineEdit):
+                            # self.config.solvers.append(item.widget().text())
+                            if not(item.widget().text() == ""):
+                                answer_exec = Exec(self.get_pro.problem, item.widget().text())
 
+                                answer = answer_exec.exe_cpp(self.on_answer_created)
+                                print(type(answer))
+                                self.answers_list.append(answer)
 
                 self.message.setText("取得成功です")
                 if self.one_get:
@@ -594,7 +634,7 @@ class MainWidget(QWidget):
                     self.widgets_list[i+1]["goal_board"] = goal_board
 
 
-    
+
                     start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.sflag, self)
                     self.widgets_list[i+1]["start_widget"] = start_gl_board
                     start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
@@ -658,10 +698,6 @@ class MainWidget(QWidget):
             else:
 
 
-                print(self.args[2])
-
-                print(self.arg_list[0])
-                print(self.arg_list[1])
                 if self.arg_list[0]:
 
                     self.widgets_list.append({})
@@ -785,30 +821,30 @@ class MainWidget(QWidget):
 
                     self.container_layout.addWidget(double_widget)
 
-                self.glwidget = self.widgets_list[0]["start_widget"]
-                self.glwidget_goal = self.widgets_list[0]["goal_widget"]
-                self.double_widget = self.widgets_list[0]["double_widget"]
-                    # self.op_idx = 0
-                self.dis_board = self.widgets_list[0]["dis_board"]
-                self.answer_num = self.widgets_list[0]["answer"]["n"]
+                    self.glwidget = self.widgets_list[0]["start_widget"]
+                    self.glwidget_goal = self.widgets_list[0]["goal_widget"]
+                    self.double_widget = self.widgets_list[0]["double_widget"]
+                        # self.op_idx = 0
+                    self.dis_board = self.widgets_list[0]["dis_board"]
+                    self.answer_num = self.widgets_list[0]["answer"]["n"]
 
-                self.one_get = True
-
-
-                self.container_widget.setLayout(self.container_layout)
-                self.scroll_area.scroll_area.setWidget(self.container_widget)
-                self.fixed_form_num = self.problem['general']['n']
+                    self.one_get = True
 
 
-                self.fixed_form_numbers =[ self.problem['general']['patterns'][x]['p'] for x in range(self.fixed_form_num)]
-                self.fixed_form_widths = self.fixed_form_widths = { self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['width'] for x in range(self.fixed_form_num)}
+                    self.container_widget.setLayout(self.container_layout)
+                    self.scroll_area.scroll_area.setWidget(self.container_widget)
+                    self.fixed_form_num = self.problem['general']['n']
+
+
+                    self.fixed_form_numbers =[ self.problem['general']['patterns'][x]['p'] for x in range(self.fixed_form_num)]
+                    self.fixed_form_widths = self.fixed_form_widths = { self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['width'] for x in range(self.fixed_form_num)}
 
 
 
-                self.fixed_form_heights = {self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['height'] for x in range(self.fixed_form_num)}
-                self.fixed_form_cells = {self.fixed_form_numbers[x] : [ [self.problem['general']['patterns'][x]['cells'][i][j] for
-                                j in range(len(self.problem['general']['patterns'][x]['cells'][i]))]for i in range(len(self.problem['general']['patterns'][x]['cells'])) ]
-                            for x in range(self.fixed_form_num)}
+                    self.fixed_form_heights = {self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['height'] for x in range(self.fixed_form_num)}
+                    self.fixed_form_cells = {self.fixed_form_numbers[x] : [ [self.problem['general']['patterns'][x]['cells'][i][j] for
+                                    j in range(len(self.problem['general']['patterns'][x]['cells'][i]))]for i in range(len(self.problem['general']['patterns'][x]['cells'])) ]
+                                for x in range(self.fixed_form_num)}
 
 
                 if self.get_pro.status_code == 400:
@@ -856,4 +892,17 @@ class MainWidget(QWidget):
         if self.double_widget != self.widgets_list[0]["double_widget"]:
             self.applyOn(value)
 
+
+    def add_solver(self):
+
+        text_solver = QLineEdit()
+        self.config.solvers.append("")
+        self.solver_layout.addWidget(text_solver)
+
+    def remove_solver(self):
+        item = self.solver_layout.takeAt(self.solver_layout.count()-1)
+        widget = item.widget()
+        self.solver_layout.removeWidget(widget)
+        widget.deleteLater()
+        self.config.solvers.pop()
 
