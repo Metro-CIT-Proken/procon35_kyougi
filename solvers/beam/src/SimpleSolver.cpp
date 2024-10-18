@@ -15,7 +15,7 @@ std::vector<Action> SimpleSolver::solve(const Problem &prob)
     int h = sboard.height;
     int w = sboard.width;
     int count = 0;
-    for (int l = 0; l < h ; l++)
+    for (int l = 0; l < h; l++)
     {
         for (int g = 0; g < w; g++)
         {
@@ -30,6 +30,25 @@ std::vector<Action> SimpleSolver::solve(const Problem &prob)
                 if (sboard.cells[l][j] == gboard.cells[l][g])
                 {
                     std::bitset<8> bitj(j - g);
+                    int sizej = bitj.count();
+                    if (bitj.count() >= 3)
+                    {
+                        int y = 0;
+                        int s = 0;
+                        for (int x = 1; x < 257; x *= 2)
+                        {
+                            if (x >= j - g)
+                            {
+                                y = w - x - g - 2;
+                                break;
+                            }
+                        }
+                        sizej = 2;
+                        // std::cerr << "call" << std::min(-1, -l) << std::endl;
+                        pic.push_back({sizej, {std::min(-1, -l), j}});
+
+                        continue;
+                    }
                     pic.push_back({bitj.count(), {l, j}});
                 }
             }
@@ -37,30 +56,24 @@ std::vector<Action> SimpleSolver::solve(const Problem &prob)
             {
                 for (int j = 0; j < w; j++)
                 {
+
                     if (sboard.cells[i][j] == gboard.cells[l][g])
                     {
-                        int a = -1;
                         std::pair<int, int> ij;
-                        for (int r = 0; r < 4; r++)
+                        std::bitset<8> biti(i - l);
+
+                        int sizei = biti.count();
+
+                        if (l == 0)
                         {
-
-                            std::bitset<8> biti(i - l);
-
-                            int sizei = biti.count();
-
-                            if (l == 0)
-                            {
-                                sizei = 0;
-                            }
-
-                            if (j != g)
-                                sizei += 1;
-                            if (a == -1 || a > sizei)
-                            {
-                                a = sizei;
-                                ij = {i, j};
-                            }
+                            sizei = 0;
                         }
+
+                        if (j != g)
+                            sizei += 1;
+
+                        int a = sizei;
+                        ij = {i, j};
                         pic.push_back({a, {ij}});
                     }
                 }
@@ -68,28 +81,64 @@ std::vector<Action> SimpleSolver::solve(const Problem &prob)
 
             std::sort(pic.begin(), pic.end());
             auto q = pic[0];
-
             auto chose = pic[0].second;
-            int i, j;
-            std::tie(i, j) = chose;
+            int i, j, I;
+            std::tie(I, j) = chose;
+            i = abs(I);
             std::bitset<8> biti(i - l);
             int get = sboard.cells[i][j];
             if (i == l)
             {
-                std::bitset<8> bitj(j - g);
-                int jj = j - g;
-
-                for (int x = 0; x < 9; x++)
+                if (i == I)
                 {
-                    if (bitj[x])
+                    std::bitset<8> bitj(j - g);
+                    int jj = j - g;
+
+                    for (int x = 0; x < 9; x++)
                     {
-                        auto &stenc = prob.stencils.at(std::max(0, -1 + 3 * x));
+                        if (bitj[x])
+                        {
+                            auto &stenc = prob.stencils.at(std::max(0, -1 + 3 * x));
 
-                        sboard.advance(stenc, g + jj - stenc.width, i, StencilDirection::LEFT);
-                        act.push_back({stenc.id, g + jj - stenc.width, i, StencilDirection::LEFT});
+                            sboard.advance(stenc, g + jj - stenc.width, l, StencilDirection::LEFT);
+                            act.push_back({stenc.id, g + jj - stenc.width, l, StencilDirection::LEFT});
 
-                        jj -= stenc.height;
+                            jj -= stenc.height;
+                        }
                     }
+                }
+                else
+                {
+                    int y = 0;
+                    int s = 0;
+                    int z = 0;
+                    for (int x = 1; x < 257; x *= 2)
+                    {
+                        if (x >= j - g)
+                        {
+                            y = w - x - g - 1;
+                            break;
+                        }
+                        z++;
+                    }
+                    for (int x = 1; x < 257; x *= 2)
+                    {
+                        if (x >= y + 1)
+                        {
+                            break;
+                        }
+                        s++;
+                    }
+
+                    auto &stenc = prob.stencils.at(std::max(0, -1 + 3 * s));
+                    sboard.advance(stenc, j + y + 1 - stenc.height, l, StencilDirection::LEFT);
+                    act.push_back({stenc.id, j + y + 1 - stenc.height, l, StencilDirection::LEFT});
+
+                    auto &stenc2 = prob.stencils.at(std::max(0, -1 + 3 * z));
+                    sboard.advance(stenc2, g, l, StencilDirection::LEFT);
+                    act.push_back({stenc2.id, g, l, StencilDirection::LEFT});
+
+                    std::cerr << "use X_lian_fast_seter " << std::endl;
                 }
             }
             else if (j != g)
@@ -158,7 +207,6 @@ std::vector<Action> SimpleSolver::solve(const Problem &prob)
                 std::cerr << "error" << l << " " << g << std::endl;
         }
         std::cerr << "line" << l << "finshed" << std::endl;
-        // std::cin.get();
     }
     std::cerr << act.size() << std::endl;
     std::cerr << "count" << count << std::endl;
