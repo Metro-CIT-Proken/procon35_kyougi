@@ -65,6 +65,19 @@ public:
         return cells[y * wordsPerLine + wi];
     }
 
+    bool operator==(const Board_bitboard &rhs) const {
+        return this->cells == rhs.cells;
+    }
+
+    struct hash {
+        size_t operator()(const Board_bitboard &rhs) const {
+            WordType  w = 0;
+            for(int i = 0; i < rhs.cells.size(); i++)
+                w ^= rhs.cells[i];
+            return (size_t)w ^ (size_t)(w >> 32);
+        }
+    };
+
     const int wordsPerLine;
     std::vector<WordType> cells;
 };

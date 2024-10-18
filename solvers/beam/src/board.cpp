@@ -85,7 +85,6 @@ void Stencil::calculateLegalActions(std::set<CellsType<int>> &excludedBoards, bo
     decltype(legalActionCache)::key_type cache_key = 
         {problem->width, problem->height, problem->id, id, problem->oy != 0, onlyLR};
     if(legalActionCache.count(cache_key)) {
-        std::cerr << "cached" << std::endl;
         _legalActions = &legalActionCache[cache_key];
         return;
     }
