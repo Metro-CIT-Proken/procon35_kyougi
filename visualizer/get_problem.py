@@ -1,6 +1,7 @@
 import requests
 from mainwidget import *
 from config import *
+import json
 class Get():
     def __init__(self,config):
         self.config = config
@@ -49,12 +50,13 @@ class Get():
                 return 1
         except requests.exceptions.RequestException as e :
             print('Error',e)
+            print('Stacktrace',e.filename)
             self.error = e
             # exit(1)
 
 class GetByHand():
     def __init__(self, problem):
-        self.status_code = 200
+        self.status_code = 100
         self.error = ""
 
         self.problem = problem

@@ -4,8 +4,13 @@ import tempfile
 import json
 import threading
 
-class Exec():
+from PyQt6.QtCore import pyqtSignal, QObject
+
+class Exec(QObject):
+    answerCreated = pyqtSignal(dict)
+
     def __init__(self, problem, solver):
+        super().__init__()
         self.problem = problem
         self.solver_path = solver
         self.problem_path = tempfile.mktemp()
@@ -22,7 +27,9 @@ class Exec():
             def wait_proc():
                 self.proc.wait()
                 answer = json.loads(self.proc.stdout.read())
-                callback(answer)
+                self.answerCreated.emit(answer)
+
+            self.answerCreated.connect(callback)
 
             self.thread = threading.Thread(target=wait_proc)
             self.thread.start()
@@ -30,8 +37,6 @@ class Exec():
             print("failed")
             print(f"code: {error.returncode}")
             print(f"error output: {error.stderr}")
-
-        return json.loads(self.proc.stdout.read())
 
 def print_answer(answer):
     print("answer generated")

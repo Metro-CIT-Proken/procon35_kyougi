@@ -14,6 +14,7 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from scroll_widget import *
 from exec_solver import *
+from external_solver import *
 
 
 
@@ -163,6 +164,15 @@ class MainWidget(QWidget):
         self.add_solver_button = QPushButton("ソルバーを追加する")
         self.remove_solver_button = QPushButton("ソルバーを削除する")
 
+
+
+        self.pc_address_layout = QVBoxLayout()
+
+        self.add_pc_address_button = QPushButton("PCのアドレスを追加する")
+        self.remove_pc_address_button = QPushButton("PCのアドレスを削除する")
+
+
+
         self.message = QLabel()
         self.message.setFixedSize(300,100)
         self.message.setWordWrap(True)
@@ -201,8 +211,14 @@ class MainWidget(QWidget):
 
 
         self.get_button.clicked.connect(self.get)
+
         self.add_solver_button.clicked.connect(self.add_solver)
         self.remove_solver_button.clicked.connect(self.remove_solver)
+
+        self.add_pc_address_button.clicked.connect(self.add_pc_address)
+        self.remove_pc_address_button.clicked.connect(self.remove_pc_address)
+
+
             # self.post_button.clicked.connect(self.post)
 
         layout_button = QHBoxLayout()
@@ -212,6 +228,14 @@ class MainWidget(QWidget):
         layout_cont.addLayout(self.solver_layout)
         layout_cont.addWidget(self.add_solver_button)
         layout_cont.addWidget(self.remove_solver_button)
+
+        layout_cont.addLayout(self.pc_address_layout)
+
+        layout_cont.addWidget(self.add_pc_address_button)
+        layout_cont.addWidget(self.remove_pc_address_button)
+
+
+
         layout_cont.addWidget(self.message)
 
         for solver in self.config.solvers:
@@ -298,52 +322,62 @@ class MainWidget(QWidget):
 
     def ZoomController(self, num):#クリックしたキーごとに処理を実行する
         if num == 1:
-            if self.glwidget_goal.zoomy*self.glwidget_goal.zoom+(self.glwidget_goal.zoom*2)+0.1  <=  2.0:#拡大する場合ZZZ
-                self.glwidget_goal.zoomy += 0.1
-                if self.glwidget_goal.zoom_direction >= 2:
-                    self.glwidget_goal.zoom_direction -= 2
+            if self.glwidget_goal.is_focus:
+                if self.glwidget_goal.zoomy*self.glwidget_goal.zoom+(self.glwidget_goal.zoom*2)+0.1  <=  2.0:#拡大する場合ZZZ
+                    self.glwidget_goal.zoomy += 0.1
+                    if self.glwidget_goal.zoom_direction >= 2:
+                        self.glwidget_goal.zoom_direction -= 2
+                else:
+                    self.glwidget_goal.zoomy = 2/self.glwidget_goal.zoom-2
+            if self.glwidget.is_focus:
+                if self.glwidget.zoomy*self.glwidget.zoom+(self.glwidget.zoom*2)+0.1  <=  2.0:#拡大する場合ZZZ
+                    self.glwidget.zoomy += 0.1
+                    if self.glwidget.zoom_direction >= 2:
+                        self.glwidget.zoom_direction -= 2
+                else:
+                    self.glwidget.zoomy = 2/self.glwidget.zoom-2
+            # else:
+            #     if self.glwidget.is_focus:
+            #         self.glwidget.zoomy = 2/self.glwidget.zoom-2
+            #     if self.glwidget_goal.is_focus:
 
-            if self.glwidget.zoomy*self.glwidget.zoom+(self.glwidget.zoom*2)+0.1  <=  2.0:#拡大する場合ZZZ
-                self.glwidget.zoomy += 0.1
-                if self.glwidget.zoom_direction >= 2:
-                    self.glwidget.zoom_direction -= 2
-            else:
-                self.glwidget.zoomy = 2/self.glwidget.zoom-2
 
 
 
         elif num == 2:
-            if self.glwidget_goal.zoomx-0.1  >=  0:
-                self.glwidget_goal.zoomx -= 0.1
-                if self.glwidget_goal.zoom_direction % 2 == 1:
-                    self.glwidget_goal.zoom_direction -= 1
-            else:
-                self.glwidget_goal.zoomx = 0
+            if self.glwidget_goal.is_focus:
+                if self.glwidget_goal.zoomx-0.1  >=  0:
+                    self.glwidget_goal.zoomx -= 0.1
+                    if self.glwidget_goal.zoom_direction % 2 == 1:
+                        self.glwidget_goal.zoom_direction -= 1
+                else:
+                    self.glwidget_goal.zoomx = 0
 
-
-            if self.glwidget.zoomx-0.1  >=  0:
-                self.glwidget.zoomx -= 0.1
-                if self.glwidget.zoom_direction % 2 == 1:
-                    self.glwidget.zoom_direction -= 1
-            else:
-                self.glwidget.zoomx = 0
+            if self.glwidget.is_focus:
+                if self.glwidget.zoomx-0.1  >=  0:
+                    self.glwidget.zoomx -= 0.1
+                    if self.glwidget.zoom_direction % 2 == 1:
+                        self.glwidget.zoom_direction -= 1
+                else:
+                    self.glwidget.zoomx = 0
 
 
         elif num == 3:
-            if self.glwidget_goal.zoomy-0.1  >=  0:
-                self.glwidget_goal.zoomy -= 0.1
-                if self.glwidget_goal.zoom_direction <= 2:
-                    self.glwidget_goal.zoom_direction += 2
-            else:
-                self.glwidget_goal.zoomy = 0
+            if self.glwidget_goal.is_focus:
+                if self.glwidget_goal.zoomy-0.1  >=  0:
+                    self.glwidget_goal.zoomy -= 0.1
+                    if self.glwidget_goal.zoom_direction <= 2:
+                        self.glwidget_goal.zoom_direction += 2
+                else:
+                    self.glwidget_goal.zoomy = 0
 
-
-            if self.glwidget.zoomy-0.1  >=  0:
-                self.glwidget.zoomy -= 0.1
-                if self.glwidget.zoom_direction <= 2:
-                    self.glwidget.zoom_direction += 2
-            else:
-                self.glwidget.zoomy = 0
+            if self.glwidget.is_focus:
+                if self.glwidget.zoomy-0.1  >=  0:
+                    self.glwidget.zoomy -= 0.1
+                    if self.glwidget.zoom_direction <= 2:
+                        self.glwidget.zoom_direction += 2
+                else:
+                    self.glwidget.zoomy = 0
 
         elif num == 4:
             if self.glwidget_goal.is_focus:
@@ -511,6 +545,10 @@ class MainWidget(QWidget):
         self.config.save()
 
     def on_answer_created(self, answer):
+        if self.arg_list[1]:
+            self.widgets_list.append({})
+        self.answers_list.append(answer)
+        self.on_answer_added()
         return answer
 
     def get(self):
@@ -520,23 +558,41 @@ class MainWidget(QWidget):
             else:
                 self.get_pro = Get(self.config)
 
-            if self.get_pro.status_code== 200:
+            if self.get_pro.status_code== 200 or self.get_pro.status_code == 100:
                 self.answers_list = [None, ]
                 if self.arg_list[1]:
-                    self.answers_list.append(self.file_answer)
+                    self.on_answer_created(self.file_answer)
                 else:
-                    for i in range(self.solver_layout.count()):
-                        item = self.solver_layout.itemAt(i)
-                        if item.widget() and isinstance(item.widget(), QLineEdit):
-                            # self.config.solvers.append(item.widget().text())
-                            if not(item.widget().text() == ""):
-                                answer_exec = Exec(self.get_pro.problem, item.widget().text())
 
-                                answer = answer_exec.exe_cpp(self.on_answer_created)
-                                print(type(answer))
-                                self.answers_list.append(answer)
+                        for i in range(self.pc_address_layout.count()):
 
-                self.message.setText("取得成功です")
+                            last_pc_address_line = self.pc_address_layout.itemAt(i)
+                            layout = last_pc_address_line.layout()
+                            print("aaaaaaa",layout.count())
+                            check_item = layout.itemAt(0)
+                            check_widget = check_item.widget()
+                            print("bbbbbbbb",layout.count())
+                            if check_widget.isChecked():
+                                pc_address_item = layout.itemAt(1)
+                                pc_address_widget = pc_address_item.widget()
+                                pc_solver_item = layout.itemAt(2)
+                                pc_solver_widget = pc_solver_item.widget()
+
+                                external_solver = ExternalSolver(pc_address_widget.text(), pc_solver_widget.text(),self.get_pro.problem)
+                                external_solver.solve(self.on_answer_created)
+
+                        for i in range(self.solver_layout.count()):
+                            item = self.solver_layout.itemAt(i)
+                            if item.widget() and isinstance(item.widget(), QLineEdit):
+                                # self.config.solvers.append(item.widget().text())
+                                if not(item.widget().text() == ""):
+                                    answer_exec = Exec(self.get_pro.problem, item.widget().text())
+                                    answer = answer_exec.exe_cpp(self.on_answer_created)
+
+                if self.get_pro.status_code == 200:
+                    self.message.setText("取得成功です")
+                elif  self.get_pro.status_code == 100:
+                    self.message.setText("ソルバー取得成功")
                 if self.one_get:
                     for widget in self.widgets_list:
                         self.scroll_area.scroll_area_layout.removeWidget(widget["double_widget"])
@@ -596,71 +652,6 @@ class MainWidget(QWidget):
                     self.answer_num = 0
                     self.first_gl_layout.addWidget(first_double_widget)
 
-
-
-
-
-                for i in range(len(self.answers_list)-1):
-                    self.widgets_list.append({})
-                    zoom = 1
-                    zoom_direction = 0
-
-                    self.widgets_list[i+1]["zoom"] = zoom
-                    self.widgets_list[i+1]["zoom_direction"] = zoom_direction
-
-
-                    self.op_idx = 0
-
-                    b_wid = self.get_pro.board_width
-                    self.widgets_list[i+1]["board_width"] = b_wid
-
-                    next_pos = b_wid*CELL_SIZE+100
-                    self.widgets_list[i+1]["next_pos"] = next_pos
-
-                    b_hei = self.get_pro.board_height
-                    self.widgets_list[i+1]["board_height"] = b_hei
-
-
-                    self.widgets_list[i+1]["answer"] = self.answers_list[i+1]
-
-
-                    dis_board = [[0 for _ in range(b_wid)]for _ in range(b_hei)]
-                    self.widgets_list[i+1]["dis_board"] = dis_board
-
-                    start_board = [row[:] for row in self.get_pro.start_board]
-                    self.widgets_list[i+1]["start_board"] = start_board
-
-                    goal_board =  [row[:] for row in self.get_pro.goal_board]
-                    self.widgets_list[i+1]["goal_board"] = goal_board
-
-
-
-                    start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.sflag, self)
-                    self.widgets_list[i+1]["start_widget"] = start_gl_board
-                    start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
-                    # self.start_widgets_list.append(start_gl_board)
-                    goal_gl_board = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, self)
-                    self.widgets_list[i+1]["goal_widget"] = goal_gl_board
-
-
-
-                    answer = self.args[1]
-                    config = self.config
-
-                    double_widget = DoubleWidget(start_gl_board, goal_gl_board, answer, config)
-                    double_widget.slider.valueChanged.connect(self.SliderChange)
-                    double_widget.op_idx = 0
-                    double_widget.answer_num = self.widgets_list[i+1]["answer"]["n"]
-                    self.widgets_list[i+1]["double_widget"] = double_widget
-
-
-
-
-
-                    self.container_layout.addWidget(double_widget)
-
-
-
                 self.glwidget = self.widgets_list[0]["start_widget"]
                 self.glwidget_goal = self.widgets_list[0]["goal_widget"]
                 self.double_widget = self.widgets_list[0]["double_widget"]
@@ -698,59 +689,57 @@ class MainWidget(QWidget):
             else:
 
 
-                if self.arg_list[0]:
+                # if self.arg_list[0]:
+                #     print(00000000000000)
+                #     self.widgets_list.append({})
+                #     zoom = 1
+                #     self.widgets_list[0]["zoom"] = zoom
+                #     zoom_direction = 0
+                #     self.widgets_list[0]["zoom_direction"] = zoom_direction
+                #     board_width = self.problem['board']['width']
+                #     board_height = self.problem['board']['height']
+                #     start_board = [[ int(self.problem['board']['start'][y][x]) for x in range(board_width)]for y in range(board_height)]
+                #     goal_board = [[ int(self.problem['board']['goal'][y][x]) for x in range(board_width)]for y in range(board_height)]
 
-                    self.widgets_list.append({})
-                    zoom = 1
-                    self.widgets_list[0]["zoom"] = zoom
-                    zoom_direction = 0
-                    self.widgets_list[0]["zoom_direction"] = zoom_direction
-                    board_width = self.problem['board']['width']
-                    board_height = self.problem['board']['height']
-                    start_board = [[ int(self.problem['board']['start'][y][x]) for x in range(board_width)]for y in range(board_height)]
-                    goal_board = [[ int(self.problem['board']['goal'][y][x]) for x in range(board_width)]for y in range(board_height)]
-
-                    # start_board = [row[:] for row in start_board]
-
-
-
-
-                    # goal_board = [row[:] for row in goal_board]
-
-                    b_wid = board_width
-                    b_hei = board_height
-
-                    self.widgets_list[0]["board_width"] = b_wid
-                    self.widgets_list[0]["board_height"] = b_hei
-
-
-                    dis_board = [[0 for _ in range(b_wid)]for _ in range(b_hei)]
-                    self.widgets_list[0]["dis_board"] = dis_board
-
-                    self.widgets_list[0]["answer"] = {
-                                                            "n": 0,
-                                                            "ops": [
-                                                            ]
-                                                    }
-
-                    # self.widgets_list[0]["answer_num"] = self.widgets_list[0]["answer"]["n"]
+                #     # start_board = [row[:] for row in start_board]
 
 
 
-                    if start_board != [[]] or goal_board != [[]]:
-                        first_start_gl = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.sflag, self)
-                        self.widgets_list[0]["start_widget"] = first_start_gl
-                        first_goal_gl = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, None, None, False, self)
-                        self.widgets_list[0]["goal_widget"] = first_goal_gl
 
-                        first_double_widget = FirstDoubleWidget(first_start_gl, first_goal_gl)
-                        first_double_widget.op_idx = 0
-                        self.widgets_list[0]["double_widget"] = first_double_widget
-                        self.widgets_list[0]["double_widget"].answer_num = 0
-                        self.answer_num = 0
-                        self.first_gl_layout.addWidget(first_double_widget)
+                #     # goal_board = [row[:] for row in goal_board]
+
+                #     b_wid = board_width
+                #     b_hei = board_height
+
+                #     self.widgets_list[0]["board_width"] = b_wid
+                #     self.widgets_list[0]["board_height"] = b_hei
 
 
+                #     dis_board = [[0 for _ in range(b_wid)]for _ in range(b_hei)]
+                #     self.widgets_list[0]["dis_board"] = dis_board
+
+                #     self.widgets_list[0]["answer"] = {
+                #                                             "n": 0,
+                #                                             "ops": [
+                #                                             ]
+                #                                     }
+
+                #     # self.widgets_list[0]["answer_num"] = self.widgets_list[0]["answer"]["n"]
+
+
+
+                #     if start_board != [[]] or goal_board != [[]]:
+                #         first_start_gl = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.sflag, self)
+                #         self.widgets_list[0]["start_widget"] = first_start_gl
+                #         first_goal_gl = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, None, None, False, self)
+                #         self.widgets_list[0]["goal_widget"] = first_goal_gl
+
+                #         first_double_widget = FirstDoubleWidget(first_start_gl, first_goal_gl)
+                #         first_double_widget.op_idx = 0
+                #         self.widgets_list[0]["double_widget"] = first_double_widget
+                #         self.widgets_list[0]["double_widget"].answer_num = 0
+                #         self.answer_num = 0
+                #         self.first_gl_layout.addWidget(first_double_widget)
 
 
 
@@ -759,92 +748,99 @@ class MainWidget(QWidget):
 
 
 
-                if self.arg_list[1]:
-                    print("zzzzzzzzzzzzzzzzzzzz")
-
-                    self.widgets_list.append({})
-                    zoom = 1
-                    zoom_direction = 0
-
-                    self.widgets_list[1]["zoom"] = zoom
-                    self.widgets_list[1]["zoom_direction"] = zoom_direction
 
 
-                    self.op_idx = 0
+                # if self.arg_list[1]:
+                #     print("zzzzzzzzzzzzzzzzzzzz")
 
-                    self.widgets_list[1]["board_width"] = b_wid
+                #     self.widgets_list.append({})
+                #     zoom = 1
+                #     zoom_direction = 0
 
-                    next_pos = b_wid*CELL_SIZE+100
-                    self.widgets_list[1]["next_pos"] = next_pos
-
-                    self.widgets_list[1]["board_height"] = b_hei
-
-
-                    self.widgets_list[1]["answer"] = self.file_answer
-                    print(self.file_answer)
+                #     self.widgets_list[1]["zoom"] = zoom
+                #     self.widgets_list[1]["zoom_direction"] = zoom_direction
 
 
-                    dis_board = [[0 for _ in range(b_wid)]for _ in range(b_hei)]
-                    self.widgets_list[1]["dis_board"] = dis_board
+                #     self.op_idx = 0
 
-                    # start_board = [row[:] for row in self.get_pro.start_board]
-                    self.widgets_list[1]["start_board"] = start_board
-                    print(len(start_board))
-                    print(len(start_board[0]))
-                    print(len(goal_board))
-                    print(len(goal_board[0]))
+                #     self.widgets_list[1]["board_width"] = b_wid
 
-                    # goal_board =  [row[:] for row in self.get_pro.goal_board]
-                    self.widgets_list[1]["goal_board"] = goal_board
+                    # next_pos = b_wid*CELL_SIZE+100
+                    # self.widgets_list[1]["next_pos"] = next_pos
 
-                    start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.sflag, self)
-                    self.widgets_list[1]["start_widget"] = start_gl_board
-                    start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
-                    # self.start_widgets_list.append(start_gl_board)
-                    goal_gl_board = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, self)
-                    self.widgets_list[1]["goal_widget"] = goal_gl_board
+                    # self.widgets_list[1]["board_height"] = b_hei
 
 
-
-                    answer = self.args[2]
-                    config = self.config
-
-                    double_widget = DoubleWidget(start_gl_board, goal_gl_board, answer, config)
-                    double_widget.slider.valueChanged.connect(self.SliderChange)
-                    double_widget.op_idx = 0
-                    double_widget.answer_num = self.widgets_list[1]["answer"]["n"]
-                    self.widgets_list[1]["double_widget"] = double_widget
+                    # self.widgets_list[1]["answer"] = self.file_answer
+                    # print(self.file_answer)
 
 
+                    # dis_board = [[0 for _ in range(b_wid)]for _ in range(b_hei)]
+                    # self.widgets_list[1]["dis_board"] = dis_board
+
+                    # # start_board = [row[:] for row in self.get_pro.start_board]
+                    # self.widgets_list[1]["start_board"] = start_board
+                    # print(len(start_board))
+                    # print(len(start_board[0]))
+                    # print(len(goal_board))
+                    # print(len(goal_board[0]))
+
+                    # # goal_board =  [row[:] for row in self.get_pro.goal_board]
+                    # self.widgets_list[1]["goal_board"] = goal_board
+
+                    # start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.sflag, self)
+                    # self.widgets_list[1]["start_widget"] = start_gl_board
+                    # start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
+                    # # self.start_widgets_list.append(start_gl_board)
+                    # goal_gl_board = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, self)
+                    # self.widgets_list[1]["goal_widget"] = goal_gl_board
 
 
+                    # # if self.arg_list[1]:
+                    # answer = self.args[2]
+                    # # else:
+                    # #     answer = tempfile.mktemp()
+                    # #     with open(answer, "w+") as f:
+                    # #         f.write(json.dumps(self.answers_list[i+1]))
 
-                    self.container_layout.addWidget(double_widget)
+                    # config = self.config
 
-                    self.glwidget = self.widgets_list[0]["start_widget"]
-                    self.glwidget_goal = self.widgets_list[0]["goal_widget"]
-                    self.double_widget = self.widgets_list[0]["double_widget"]
-                        # self.op_idx = 0
-                    self.dis_board = self.widgets_list[0]["dis_board"]
-                    self.answer_num = self.widgets_list[0]["answer"]["n"]
-
-                    self.one_get = True
-
-
-                    self.container_widget.setLayout(self.container_layout)
-                    self.scroll_area.scroll_area.setWidget(self.container_widget)
-                    self.fixed_form_num = self.problem['general']['n']
-
-
-                    self.fixed_form_numbers =[ self.problem['general']['patterns'][x]['p'] for x in range(self.fixed_form_num)]
-                    self.fixed_form_widths = self.fixed_form_widths = { self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['width'] for x in range(self.fixed_form_num)}
+                    # double_widget = DoubleWidget(start_gl_board, goal_gl_board, answer, config)
+                    # double_widget.slider.valueChanged.connect(self.SliderChange)
+                    # double_widget.op_idx = 0
+                    # double_widget.answer_num = self.widgets_list[1]["answer"]["n"]
+                    # self.widgets_list[1]["double_widget"] = double_widget
 
 
 
-                    self.fixed_form_heights = {self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['height'] for x in range(self.fixed_form_num)}
-                    self.fixed_form_cells = {self.fixed_form_numbers[x] : [ [self.problem['general']['patterns'][x]['cells'][i][j] for
-                                    j in range(len(self.problem['general']['patterns'][x]['cells'][i]))]for i in range(len(self.problem['general']['patterns'][x]['cells'])) ]
-                                for x in range(self.fixed_form_num)}
+
+
+                    # self.container_layout.addWidget(double_widget)
+
+                    # self.glwidget = self.widgets_list[0]["start_widget"]
+                    # self.glwidget_goal = self.widgets_list[0]["goal_widget"]
+                    # self.double_widget = self.widgets_list[0]["double_widget"]
+                    #     # self.op_idx = 0
+                    # self.dis_board = self.widgets_list[0]["dis_board"]
+                    # self.answer_num = self.widgets_list[0]["answer"]["n"]
+
+                    # self.one_get = True
+
+
+                    # self.container_widget.setLayout(self.container_layout)
+                    # self.scroll_area.scroll_area.setWidget(self.container_widget)
+                    # self.fixed_form_num = self.problem['general']['n']
+
+
+                    # self.fixed_form_numbers =[ self.problem['general']['patterns'][x]['p'] for x in range(self.fixed_form_num)]
+                    # self.fixed_form_widths = self.fixed_form_widths = { self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['width'] for x in range(self.fixed_form_num)}
+
+
+
+                    # self.fixed_form_heights = {self.fixed_form_numbers[x] : self.problem['general']['patterns'][x]['height'] for x in range(self.fixed_form_num)}
+                    # self.fixed_form_cells = {self.fixed_form_numbers[x] : [ [self.problem['general']['patterns'][x]['cells'][i][j] for
+                    #                 j in range(len(self.problem['general']['patterns'][x]['cells'][i]))]for i in range(len(self.problem['general']['patterns'][x]['cells'])) ]
+                    #             for x in range(self.fixed_form_num)}
 
 
                 if self.get_pro.status_code == 400:
@@ -865,10 +861,69 @@ class MainWidget(QWidget):
 
 
 
+    def on_answer_added(self):
+        # for i in range(len(self.widgets_list) - 1, len(self.answers_list) - 1):
+        for i in range(len(self.widgets_list)-1,len(self.answers_list) - 1):
+            self.widgets_list.append({})
+            zoom = 1
+            zoom_direction = 0
+
+            self.widgets_list[i+1]["zoom"] = zoom
+            self.widgets_list[i+1]["zoom_direction"] = zoom_direction
 
 
-    def post(self):
-        pass
+            self.op_idx = 0
+
+            b_wid = self.get_pro.board_width
+            self.widgets_list[i+1]["board_width"] = b_wid
+
+            next_pos = b_wid*CELL_SIZE+100
+            self.widgets_list[i+1]["next_pos"] = next_pos
+
+            b_hei = self.get_pro.board_height
+            self.widgets_list[i+1]["board_height"] = b_hei
+
+
+            self.widgets_list[i+1]["answer"] = self.answers_list[i+1]
+
+
+            dis_board = [[0 for _ in range(b_wid)]for _ in range(b_hei)]
+            self.widgets_list[i+1]["dis_board"] = dis_board
+
+            start_board = [row[:] for row in self.get_pro.start_board]
+            self.widgets_list[i+1]["start_board"] = start_board
+
+            goal_board =  [row[:] for row in self.get_pro.goal_board]
+            self.widgets_list[i+1]["goal_board"] = goal_board
+
+
+
+            start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.sflag, self)
+            self.widgets_list[i+1]["start_widget"] = start_gl_board
+            start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
+            # self.start_widgets_list.append(start_gl_board)
+            goal_gl_board = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, self)
+            self.widgets_list[i+1]["goal_widget"] = goal_gl_board
+
+
+            if self.arg_list[1]:
+                answer = self.args[2]
+            else:
+                print(self.answers_list)
+                answer = tempfile.mktemp()
+                with open(answer, "w+") as f:
+                    print("aaaaaa")
+                    print(self.answers_list[i+1])
+                    f.write(json.dumps(self.answers_list[i+1]))
+            config = self.config
+
+            double_widget = DoubleWidget(start_gl_board, goal_gl_board, answer, config)
+            double_widget.slider.valueChanged.connect(self.SliderChange)
+            double_widget.op_idx = 0
+            double_widget.answer_num = self.widgets_list[i+1]["answer"]["n"]
+            self.widgets_list[i+1]["double_widget"] = double_widget
+            self.container_layout.addWidget(double_widget)
+
 
     def decide_focus_widget(self):
         for i in range(1,len(self.widgets_list)):
@@ -894,7 +949,6 @@ class MainWidget(QWidget):
 
 
     def add_solver(self):
-
         text_solver = QLineEdit()
         self.config.solvers.append("")
         self.solver_layout.addWidget(text_solver)
@@ -906,3 +960,26 @@ class MainWidget(QWidget):
         widget.deleteLater()
         self.config.solvers.pop()
 
+    def add_pc_address(self):
+        pc_address_line_layout = QHBoxLayout()
+        add_pc_address_check = QCheckBox()
+        add_pc_address_line = QLineEdit()
+        add_pc_solver_line = QLineEdit()
+
+        self.pc_address_layout.addLayout(pc_address_line_layout)
+        pc_address_line_layout.addWidget(add_pc_address_check)
+        pc_address_line_layout.addWidget(add_pc_address_line)
+        pc_address_line_layout.addWidget(add_pc_solver_line)
+
+    def remove_pc_address(self):
+        if self.pc_address_layout.count():
+            last_pc_address_line = self.pc_address_layout.takeAt(self.pc_address_layout.count()-1)
+            layout = last_pc_address_line.layout()
+            print(layout.count())
+            while layout.count():
+                item = layout.takeAt(layout.count()-1)
+                widget = item.widget()
+                print(type(widget))
+                layout.removeWidget(widget)
+                widget.deleteLater()
+            self.pc_address_layout.removeItem(last_pc_address_line)
