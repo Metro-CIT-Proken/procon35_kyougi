@@ -50,7 +50,7 @@ public:
     Board toBoard(const Problem &prob) const;
     void advance(const Stencil_bitboard &stenc, int x, int y, int s);
 
-    int getCell(int x, int y) const {
+    inline int getCell(int x, int y) const {
         int word_offset = (CELL_BITS * x) / WORD_BITS,
             word_rem    = (CELL_BITS * x) % WORD_BITS;
         auto word = getWord(y, word_offset);

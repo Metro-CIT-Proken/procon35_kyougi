@@ -1,14 +1,21 @@
-#include "board.h"
-#include "bitboard.cpp"
+#pragma once
 
+#include "board.h"
+#include "bitboard.h"
 
 struct BeamEvaluatorResult {
-
+    int value;
+    bool first_line_restored;
 };
 
 class BeamEvaluator {
 public:
-    BeamEvaluator();
+    BeamEvaluator(Problem_bitboard *problem) :
+        problem(problem)
+    {
+    }
 
-    void evaluate();
+    BeamEvaluatorResult evaluate(Board_bitboard const &board) const;
+
+    Problem_bitboard *problem;
 };
