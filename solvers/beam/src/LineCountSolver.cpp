@@ -53,7 +53,8 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
 
                                 int sizei = biti.count();
 
-                                if (sizei >= 3)
+                                // if (sizei >= 3)
+                                if(false)
                                 {
                                     int y = 0;
                                     int s = 0;
@@ -158,7 +159,6 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
                         ii -= stenc.height;
                     }
                 }
-                std::cerr << std::endl;
                 auto &stenc = prob.stencils.at(0);
                 sboard.advance(stenc, chose.second.second, chose.second.first, StencilDirection::UP);
                 act.push_back({stenc.id, chose.second.second, chose.second.first, StencilDirection::UP});
