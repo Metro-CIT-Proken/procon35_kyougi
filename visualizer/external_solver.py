@@ -26,7 +26,10 @@ class ExternalSolver(QObject):
             post = requests.post(url, json=data, proxies={"http": None, "https": None})
             if not(post.status_code == 200):
                 print("Error", post.text)
+                if post.status_code == 500:
+                    print("Solverが失敗しています")
                 return
+
 
             self.createdAnswer.connect(callback)
             self.createdAnswer.emit(post.json())
