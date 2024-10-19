@@ -17,13 +17,9 @@ public:
     {
     }
 
-    BeamState &operator=(BeamState const &rhs) {
-        
-    }
-
-    BeamState &operator=(BeamState && rhs) {
-        return *this;
-    }
+    BeamState(const BeamState &) = default;
+    BeamState &operator=(BeamState const &rhs) = default;
+    BeamState &operator=(BeamState && rhs) = default;
 
     bool operator<(const BeamState &right) const {
         return this->eval < right.eval;

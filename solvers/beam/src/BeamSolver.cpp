@@ -102,14 +102,14 @@ std::vector<Action> BeamSolver::solve(const Problem &prob)
                     new_state.answer_index = answer_index;
                     eval_depth_max[thread] = std::max(eval_depth_max[thread], eval.value);
 
-                    if(q.size() >= this->beamW * 2) {
-                        std::sort(next_q[thread].begin(), next_q[thread].end(), std::greater<BeamState>());
-                        eval_threshold[thread] = q[thread].back().eval;
-                    }
+                    // if(q.size() >= this->beamW * 2) {
+                    //     std::sort(next_q[thread].begin(), next_q[thread].end(), std::greater<BeamState>());
+                    //     eval_threshold[thread] = q[thread].back().eval;
+                    // }
 
-                    if(new_state.eval <= eval_threshold[thread]) {
-                        q.pop_back();
-                    }
+                    // if(new_state.eval <= eval_threshold[thread]) {
+                    //     q.pop_back();
+                    // }
                     
                     // 盤面が完成しているかどうか判定する
                     if(eval.first_line_restored) {

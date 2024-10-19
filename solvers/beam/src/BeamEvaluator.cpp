@@ -15,7 +15,7 @@ BeamEvaluatorResult BeamEvaluator::evaluate(Board_bitboard const &board) const
                 int sum_diff = 0;
                 std::array<int, 4> x_start;
                 std::fill(x_start.begin(), x_start.end(), x);
-                int x_end = std::min(x + 1 + 8, problem->width);
+                int x_end = std::min(x + 1 + 1, problem->width);
                 for(int tx = x; tx < x_end; tx++) {
                     int c = problem->goal.getCell(tx, y);
                     for(int sx = x_start[c]; sx < problem->width; sx++) {
@@ -45,7 +45,7 @@ BeamEvaluatorResult BeamEvaluator::evaluate(Board_bitboard const &board) const
                 int sum_diff = 0;
                 std::array<int, 4> x_start;
                 std::fill(x_start.begin(), x_start.end(), x);
-                int x_end = std::max(x - 1 - 8, 0);
+                int x_end = std::max(x - 1 - 1, 0);
                 for(int tx = x; tx >= x_end; tx--) {
                     int c = problem->goal.getCell(tx, y);
                     for(int sx = x_start[c]; sx >= 0; sx--) {

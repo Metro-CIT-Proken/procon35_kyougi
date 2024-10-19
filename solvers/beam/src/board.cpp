@@ -101,6 +101,10 @@ void Stencil::calculateLegalActions(std::set<CellsType<int>> &excludedBoards, bo
     auto &legalActions = legalActionCache[cache_key];
     _legalActions = &legalActions;
 
+    if(this->id >= 25) {
+        return;
+    }
+
     // 問題がcropされていたらyを0から始める
     int y_start = problem->oy == 0 ?
         1 - this->height : 0;
