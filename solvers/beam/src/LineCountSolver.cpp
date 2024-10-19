@@ -154,7 +154,7 @@ std::vector<Action> LineCountSolver::solve(const Problem &prob)
 
                         sboard.advance(stenc, chose.second.second, ii - stenc.height, StencilDirection::UP);
                         act.push_back({stenc.id, chose.second.second, ii - stenc.height, StencilDirection::UP});
-                        std::cout << "up " << stenc.height << " ";
+                        std::cerr << "up " << stenc.height << " ";
                         ii -= stenc.height;
                     }
                 }
