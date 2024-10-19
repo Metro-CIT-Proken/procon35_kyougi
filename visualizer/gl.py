@@ -202,15 +202,6 @@ class OpenGLWidget(QOpenGLWidget):
                 glVertex2f(first+(j*s), first+((i+1)*s))
                 glEnd()
         glDisable(GL_TEXTURE_2D)
-        glLineWidth(3.0)
-        glBegin(GL_LINES)
-        glVertex2f(0.5, 0)
-        glVertex2f(0.5, 1)
-        glEnd()
-        glBegin(GL_LINES)
-        glVertex2f(0, first+((round(height_square/2))*s))
-        glVertex2f(1, first+((round(height_square/2))*s))
-        glEnd()
         glPopMatrix()
         glFlush()
         glutSwapBuffers()
@@ -242,7 +233,7 @@ class OpenGLWidget(QOpenGLWidget):
 
 
     def mousePressEvent(self,event):
-        self.update()
+        # self.update()
         super().mousePressEvent(event)
 
     def focusInEvent(self,event):

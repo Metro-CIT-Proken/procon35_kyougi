@@ -61,8 +61,6 @@ class MainWindow(QMainWindow):
 
 
     def resizeEvent(self, event: QResizeEvent):
-        print("resize", event)
-        print(f"resize height {event.size().height()}, resize width {event.size().width()}")
         self.widget.resize(
             event.size().width(),
             event.size().height())
