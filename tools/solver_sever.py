@@ -42,9 +42,14 @@ def solve():
     problem_json.close()
     cp1 = subprocess.Popen([solvers[solve["solver"]].path,
                               temp_file_path], text=True, stdout=subprocess.PIPE)
-    cp1.wait()
     try:
-       return json.loads(cp1.stdout.read())
+       output_answer = ""
+       with open(cp1.stdout.fileno(), closefd=False) as f:
+           output_answer += f.read()
+       cp1.wait()
+       return json.loads(output_answer)
     except:
         resp = make_response("ソルバーで問題が発生しました", 500)
         return resp
+
+app.run("0.0.0.0", 8080)
