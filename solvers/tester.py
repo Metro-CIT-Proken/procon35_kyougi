@@ -3,8 +3,13 @@ import numpy as np
 import json
 import glob
 import tempfile
+import argparse
 
-files = glob.glob("../problems/64_64*.json")
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--filed', type=str,default="")
+args = parser.parse_args()
+
+files = glob.glob(f"../problems/{args.filed}*.json")
 print(files)
 for x in files:
     print(x)
