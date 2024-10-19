@@ -4,6 +4,8 @@ import tempfile
 import json
 import threading
 
+import io
+
 from PyQt6.QtCore import pyqtSignal, QObject
 
 class Exec(QObject):
@@ -25,9 +27,13 @@ class Exec(QObject):
             self.proc = subprocess.Popen(args, stdout=subprocess.PIPE, text=True)
 
             def wait_proc():
+                output = ""
+                with open(self.proc.stdout.fileno(), closefd=False) as f:
+                    output += f.read()
                 self.proc.wait()
-                answer = json.loads(self.proc.stdout.read())
-                self.answerCreated.emit(answer)
+                # print("exec_solver")
+                # print(output)
+                self.answerCreated.emit(json.loads(output))
 
             self.answerCreated.connect(callback)
 
