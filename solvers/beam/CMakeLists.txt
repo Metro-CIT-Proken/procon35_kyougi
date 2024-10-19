@@ -31,6 +31,7 @@ add_executable(solver
     src/bitboard.cpp 
     src/VDivideSolver.cpp
     src/LineCountSolver.cpp
+    src/BeamEvaluator.cpp
 )
 target_link_libraries(solver PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(solver PRIVATE TBB::tbb)

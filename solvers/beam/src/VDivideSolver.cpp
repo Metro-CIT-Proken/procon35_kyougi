@@ -9,7 +9,7 @@ std::vector<Action> VDivideSolver::solve(const Problem &prob)
 
     Problem cur_prob = prob;
 
-    for(int l = 0; l < prob.height; l += lines_per_once) {
+    for(int l = 0; l < prob.height; l += 1) {
         int lines = std::min(lines_per_once, prob.height - l);
         auto cropped_prob = cur_prob.crop(0, l, prob.width, lines);
         cropped_prob->calculateLegalActions(true);
