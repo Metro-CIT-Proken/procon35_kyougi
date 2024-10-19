@@ -31,21 +31,27 @@ std::vector<Action> SimpleSolver::solve(const Problem &prob)
                 {
                     std::bitset<8> bitj(j - g);
                     int sizej = bitj.count();
-                    if (bitj.count() >= 3)
+                    // if (bitj.count() >= 3)
+                    if (false)
                     {
                         int y = 0;
                         int s = 0;
                         for (int x = 1; x < 257; x *= 2)
                         {
+                            if (x >= w || w - x - g - 1 < 0)
+                            {
+                                pic.push_back({bitj.count(), {l, j}});
+                                break;
+                            }
                             if (x >= j - g)
                             {
-                                y = w - x - g - 2;
+                                y = w - x - g - 1;
+                                std::cerr << y << std::endl;
+                                sizej = 2;
+                                pic.push_back({sizej, {std::min(-1, -l), j}});
                                 break;
                             }
                         }
-                        sizej = 2;
-                        // std::cerr << "call" << std::min(-1, -l) << std::endl;
-                        pic.push_back({sizej, {std::min(-1, -l), j}});
 
                         continue;
                     }
@@ -81,6 +87,10 @@ std::vector<Action> SimpleSolver::solve(const Problem &prob)
 
             std::sort(pic.begin(), pic.end());
             auto q = pic[0];
+            if (q.first > 2)
+            {
+                std::cerr << "over 2 count" << q.first << std::endl;
+            }
             auto chose = pic[0].second;
             int i, j, I;
             std::tie(I, j) = chose;
