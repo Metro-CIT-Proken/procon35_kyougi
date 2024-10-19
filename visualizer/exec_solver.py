@@ -31,6 +31,8 @@ class Exec(QObject):
                 with open(self.proc.stdout.fileno(), closefd=False) as f:
                     output += f.read()
                 self.proc.wait()
+                # print("exec_solver")
+                # print(output)
                 self.answerCreated.emit(json.loads(output))
 
             self.answerCreated.connect(callback)

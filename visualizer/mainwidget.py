@@ -113,7 +113,6 @@ class MainWidget(QWidget):
         # self.dis_board = [[0 for x in range(self.b_wid)]for y in range(self.b_hei)]
         self.idx = 0
 
-        self.button_push
         self.opTimerCallback
         self.timer = QTimer()
         self.timer_oth = QTimer()
@@ -562,10 +561,8 @@ class MainWidget(QWidget):
 
                             last_pc_address_line = self.pc_address_layout.itemAt(i)
                             layout = last_pc_address_line.layout()
-                            print("aaaaaaa",layout.count())
                             check_item = layout.itemAt(0)
                             check_widget = check_item.widget()
-                            print("bbbbbbbb",layout.count())
                             if check_widget.isChecked():
                                 pc_address_item = layout.itemAt(1)
                                 pc_address_widget = pc_address_item.widget()
@@ -749,11 +746,8 @@ class MainWidget(QWidget):
             if self.arg_list[1]:
                 answer = self.args[2]
             else:
-                print(self.answers_list)
                 answer = tempfile.mktemp()
                 with open(answer, "w+") as f:
-                    print("aaaaaa")
-                    print(self.answers_list[i+1])
                     f.write(json.dumps(self.answers_list[i+1]))
             config = self.config
 
@@ -815,11 +809,9 @@ class MainWidget(QWidget):
         if self.pc_address_layout.count():
             last_pc_address_line = self.pc_address_layout.takeAt(self.pc_address_layout.count()-1)
             layout = last_pc_address_line.layout()
-            print(layout.count())
             while layout.count():
                 item = layout.takeAt(layout.count()-1)
                 widget = item.widget()
-                print(type(widget))
                 layout.removeWidget(widget)
                 widget.deleteLater()
             self.pc_address_layout.removeItem(last_pc_address_line)
