@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 import json
 import sys
 import copy
@@ -99,6 +97,53 @@ class Stencil:
 
         return new_board
 
+    def apply_inverse(self, board: Board, x, y, s: StencilDirection):
+        new_board = copy.copy(board)
+        x_start = max(0, x)
+        x_end = min(board.width, x + self.width)
+        y_start = max(0, y)
+        y_end = min(board.height, y + self.height)
+        px_start = max(0, -x)
+        px_end = min(self.width, board.width - x)
+        py_start = max(0, -y)
+        py_end = min(self.height, board.height - y)
+        if s == Stencil.StencilDirection.UP:
+            for tx in range(x_start, x_end):
+                cond = np.zeros((board.height), dtype=bool)
+                cond[y_start:y_end] = self.cells[py_start:py_end, tx - x]
+                num_zeros = board.height - np.sum(cond)
+                pushed_cells = board.board[:num_zeros, tx].copy()
+                float_cells  = board.board[num_zeros:, tx].copy()
+                np.place(new_board.board[:, tx], cond, float_cells)
+                np.place(new_board.board[:, tx], ~cond, pushed_cells)
+        elif s == Stencil.StencilDirection.DOWN:
+            for tx in range(x_start, x_end):
+                cond = np.zeros((board.height), dtype=bool)
+                cond[y_start:y_end] = self.cells[py_start:py_end, tx - x]
+                num_ones = np.sum(cond)
+                float_cells = board.board[:num_ones, tx].copy()
+                pushed_cells  = board.board[num_ones:, tx].copy()
+                np.place(new_board.board[:, tx], cond, float_cells)
+                np.place(new_board.board[:, tx], ~cond, pushed_cells)
+        elif s == Stencil.StencilDirection.LEFT:
+            for ty in range(y_start, y_end):
+                cond = np.zeros((board.width), dtype=bool)
+                cond[x_start:x_end] = self.cells[ty - y, px_start:px_end]
+                num_zeros = board.width - np.sum(cond)
+                pushed_cells = board.board[ty, :num_zeros].copy()
+                float_cells  = board.board[ty, num_zeros:].copy()
+                np.place(new_board.board[ty, :], cond, float_cells)
+                np.place(new_board.board[ty, :], ~cond, pushed_cells)
+        elif s == Stencil.StencilDirection.RIGHT:
+            for ty in range(y_start, y_end):
+                cond = np.zeros((board.width), dtype=bool)
+                cond[x_start:x_end] = self.cells[ty - y, px_start:px_end]
+                num_ones = np.sum(cond)
+                float_cells  = board.board[ty, :num_ones].copy()
+                pushed_cells = board.board[ty, num_ones:].copy()
+                np.place(new_board.board[ty, :], cond, float_cells)
+                np.place(new_board.board[ty, :], ~cond, pushed_cells)
+        return new_board
 
     def placeables(self, board: Board):
         for y in range(1 - self.height, board.height):
@@ -159,4 +204,3 @@ class Problem:
                 ]
             }
         }
->>>>>>> Stashed changes
