@@ -12,6 +12,7 @@ class ExternalSolver(QObject):
         self.solver = solver
         self.problem = problem
         self.ip_address = ip_address
+        self.status_code = 0
 
     def solve(self, callback = None):
         def start_post():
@@ -22,8 +23,8 @@ class ExternalSolver(QObject):
                 "problem": self.problem
             }
 
-
             post = requests.post(url, json=data, proxies={"http": None, "https": None})
+            self.status_code = post.status_code
             if not(post.status_code == 200):
                 print("Error", post.text)
                 if post.status_code == 500:

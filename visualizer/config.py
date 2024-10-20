@@ -7,6 +7,7 @@ class Config:
         self.token = ""
         self.file_path = file_path
         self.solvers = []
+        self.pcs=[]
 
 
     def save(self):
@@ -15,6 +16,7 @@ class Config:
             "port":self.port,
             "token":self.token,
             "solvers":self.solvers,
+            "pcs":self.pcs
         }
 
         json_data = json.dumps(config_json)
@@ -31,6 +33,7 @@ class Config:
         self.port = json_data["port"]
         self.token = json_data["token"]
         self.solvers = json_data["solvers"]
+        self.pcs = json_data["pcs"]
 
     def ip_address_edited(self,text):
         self.ip_address = text

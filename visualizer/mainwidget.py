@@ -15,6 +15,7 @@ from OpenGL.GLU import *
 from scroll_widget import *
 from exec_solver import *
 from external_solver import *
+import time
 
 
 
@@ -28,6 +29,18 @@ from config import *
 
 class MainWidget(QWidget):
     def __init__(self, parent=None):
+        super().__init__()
+        # self.time_label = QLabel()
+        # # update = pyqtSignal(int)
+
+        # self.time = QTimer(self)
+        # self.time.timeout.connect(self.update_time)
+        # self.timer = Timer()
+        # self.timer_thread = QThread()
+        # self.timer.moveToThread(self.timer_thread)
+        # self.timer.update.connect()
+
+
         super().__init__(parent)
         self.args = sys.argv
         self.aflag = False
@@ -133,6 +146,8 @@ class MainWidget(QWidget):
         self.stack_move = [[]]
 
 
+
+
         layout_cont.addWidget(self.painter_text)
         self.error_label = QLabel("")
         # self.s_flag = True
@@ -145,6 +160,9 @@ class MainWidget(QWidget):
 
 
         # if(self.aflag):
+
+
+
         self.ip_address_line = QLineEdit(self)
         self.ip_address_line.setText(self.config.ip_address)
 
@@ -199,6 +217,7 @@ class MainWidget(QWidget):
 
         layout_text = QVBoxLayout()
         layout_cont.addLayout(layout_text)
+        # layout_text.addWidget(self.time_label)
         layout_text.addWidget(ip_address_label)
         layout_text.addWidget(self.ip_address_line)
         layout_text.addWidget(port_label)
@@ -240,6 +259,20 @@ class MainWidget(QWidget):
         for solver in self.config.solvers:
             text_solver = QLineEdit(solver)
             self.solver_layout.addWidget(text_solver)
+
+        print(self.config.pcs)
+        for pc in self.config.pcs:
+            pc_address_line_layout = QHBoxLayout()
+            add_pc_address_check = QCheckBox()
+            if pc["is-Check"]:
+                add_pc_address_check.setChecked(True)
+            add_pc_address_line = QLineEdit(pc["ip_address"])
+            add_pc_solver_line = QLineEdit(pc["solver"])
+
+            self.pc_address_layout.addLayout(pc_address_line_layout)
+            pc_address_line_layout.addWidget(add_pc_address_check)
+            pc_address_line_layout.addWidget(add_pc_address_line)
+            pc_address_line_layout.addWidget(add_pc_solver_line)
 
 
             # layout_button.addWidget(self.post_button)
@@ -535,11 +568,26 @@ class MainWidget(QWidget):
             item = self.solver_layout.itemAt(i)
             if item.widget() and isinstance(item.widget(), QLineEdit):
                 self.config.solvers[i] = item.widget().text()
+
+        for i in range(self.pc_address_layout.count()):
+            last_pc_address_line = self.pc_address_layout.itemAt(i)
+            layout = last_pc_address_line.layout()
+            check_item = layout.itemAt(0)
+            check_widget = check_item.widget()
+            pc_address_item = layout.itemAt(1)
+            pc_address_widget = pc_address_item.widget()
+            pc_solver_item = layout.itemAt(2)
+            pc_solver_widget = pc_solver_item.widget()
+            self.config.pcs[i]["is-Check"] = check_widget.isChecked()
+            self.config.pcs[i]["ip_address"] = pc_address_widget.text()
+            self.config.pcs[i]["solver"] = pc_solver_widget.text()
+
+
         self.config.save()
 
     def on_answer_created(self, answer):
-        if self.arg_list[1]:
-            self.widgets_list.append({})
+        print("on_answer_created")
+        print(answer)
         self.answers_list.append(answer)
         self.on_answer_added()
         return answer
@@ -548,6 +596,8 @@ class MainWidget(QWidget):
         # if not(self.one_get):
             if self.arg_list[0]:
                 self.get_pro = GetByHand(self.problem)
+                print("hand problem")
+                print(self.get_pro.problem)
             else:
                 self.get_pro = Get(self.config)
 
@@ -795,10 +845,12 @@ class MainWidget(QWidget):
         self.config.solvers.pop()
 
     def add_pc_address(self):
+        self.config.pcs.append({"is-Check": False, "ip_address": "", "solver": ""})
         pc_address_line_layout = QHBoxLayout()
         add_pc_address_check = QCheckBox()
         add_pc_address_line = QLineEdit()
         add_pc_solver_line = QLineEdit()
+
 
         self.pc_address_layout.addLayout(pc_address_line_layout)
         pc_address_line_layout.addWidget(add_pc_address_check)
@@ -806,6 +858,7 @@ class MainWidget(QWidget):
         pc_address_line_layout.addWidget(add_pc_solver_line)
 
     def remove_pc_address(self):
+        self.config.pcs.pop()
         if self.pc_address_layout.count():
             last_pc_address_line = self.pc_address_layout.takeAt(self.pc_address_layout.count()-1)
             layout = last_pc_address_line.layout()
@@ -815,3 +868,39 @@ class MainWidget(QWidget):
                 layout.removeWidget(widget)
                 widget.deleteLater()
             self.pc_address_layout.removeItem(last_pc_address_line)
+
+    # def update_timer(self):
+    #     self.time = self.time.addSecs(1)
+
+    #     self.time_label.setText(str(300-self.time.second()))
+
+    #     if self.time.second() >= 300:
+    #         self.timer.stop()
+    #         self.time_label.setText("終了")
+#     def update_time(self):
+#         pass
+
+
+# class Timer(QObject):
+#     update = pyqtSignal(int)
+#     def __init__(self):
+#         super().__init__()
+
+
+
+
+    # def start_timer(self):
+    #     self.timer.start(300)
+
+    # def timer(self):
+    #     while(1):
+    #         current_timer = time.time()
+    #         progress_time = self.end_time - current_timer
+    #         self.time_label.setText(str(progress_time//1))
+    #         if progress_time <= 0.0:
+    #             break
+    #         self.time_label.setText("終了")
+
+
+
+
