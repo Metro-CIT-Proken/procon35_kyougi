@@ -1,7 +1,6 @@
 
 
 from homewindow  import *
-from subwindow import *
 from mainwidget import *
 from subhomewindow import *
 from PyQt6.QtCore import *
@@ -19,7 +18,6 @@ from OpenGL.GLU import *
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.option = []
         self.setWindowTitle('Test GUI')
         self.setGeometry(300, 50, 1200, 1200)
         self.widget = MainWidget(self)

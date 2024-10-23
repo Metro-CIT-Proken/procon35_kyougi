@@ -1,5 +1,6 @@
 from PyQt6.QtCore import *
 from PyQt6.QtWidgets import QApplication, QWidget
+from enum import Enum
 
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 from OpenGL.GL import *
@@ -23,6 +24,16 @@ FIRST_POSITION = -1
 
 
 TRANSLATE_GL = WIDTH/2#qtの座標系に変換する定数
+
+class Keys(Enum):
+    W_KEY = 1
+    A_KEY = 2
+    S_KEY = 3
+    D_KEY = 4
+    UP_KEY = 5
+    DOWN_KEY = 6
+    R_KEY = 7
+    E_KEY = 8
 
 class OpenGLWidget(QOpenGLWidget):
     def __init__(self,board,goal_board,zoom,zoom_direction,xtext_int=None,ytext_int=None,fournflag=None,parent=None):
@@ -87,12 +98,7 @@ class OpenGLWidget(QOpenGLWidget):
 
     def initializeGL(self):
         glClearColor(1.0,1.0,1.0,1.0)
-        # glEnable(GL_DEPTH_TEST)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        # glGenerateMipmap(GL_TEXTURE_2D)
-        # glEnable(GL_CULL_FACE)  # バックフェースカリングを有効化
-        # glCullFace(GL_BACK)     # 裏面をスキップ
+
 
 
     def hsv_to_rgb(self,h,s,v):
@@ -230,6 +236,100 @@ class OpenGLWidget(QOpenGLWidget):
             glOrtho(-1.0, 1.0, -1.0 / aspect_ratio, 1.0 / aspect_ratio, -1.0, 1.0)
 
         glMatrixMode(GL_MODELVIEW)
+
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_W:#Wキーが押された場合
+                self.ZoomController(Keys.W_KEY)
+
+        elif event.key() == Qt.Key.Key_A:#Aキーが押された場合
+                self.ZoomController(Keys.A_KEY)
+
+        elif event.key() == Qt.Key.Key_S:#Sキーが押された場合
+                self.ZoomController(Keys.S_KEY)
+
+        elif  event.key() == Qt.Key.Key_D:#Dキーが押された場合
+                self.ZoomController(Keys.D_KEY)
+
+        elif event.key() == Qt.Key.Key_Up:#UPキーが押された場合
+                self.ZoomController(Keys.UP_KEY)
+
+        elif event.key() == Qt.Key.Key_Down:#Downキーが押された場合
+                self.ZoomController(Keys.DOWN_KEY)
+
+        elif event.key() == Qt.Key.Key_R:#Rキーが押された場合
+                self.ZoomController(Keys.R_KEY)
+
+        elif event.key() == Qt.Key.Key_E:#Eキーが押された場合
+                self.ZoomController(Keys.E_KEY)
+
+
+    def ZoomController(self,key):#クリックしたキーごとに処理を実行する
+        if key == Keys.W_KEY:
+            if self.is_focus:
+                if self.zoomy*self.zoom+(self.zoom*2)+0.1  <=  2.0:#拡大する場合ZZZ
+                    self.zoomy += 0.1
+                    if self.zoom_direction >= 2:
+                        self.zoom_direction -= 2
+                else:
+                    self.zoomy = 2/self.zoom-2
+
+
+
+        elif key == Keys.A_KEY:
+            if self.is_focus:
+                if self.zoomx-0.1  >=  0:
+                    self.zoomx -= 0.1
+                    if self.zoom_direction % 2 == 1:
+                        self.zoom_direction -= 1
+                else:
+                    self.zoomx = 0
+
+
+        elif key == Keys.S_KEY:
+            if self.is_focus:
+                if self.zoomy-0.1  >=  0:
+                    self.zoomy -= 0.1
+                    if self.zoom_direction <= 2:
+                        self.zoom_direction += 2
+                else:
+                    self.zoomy = 0
+
+
+
+        elif key == Keys.D_KEY:
+
+            if self.is_focus:
+                if self.zoomx*self.zoom+(self.zoom*2)+0.1  <=  2.0 :
+                    self.zoomx += 0.1
+                    if self.zoom_direction % 2 == 0:
+                        self.zoom_direction += 1
+                else:
+                    self.zoomx = 2/self.zoom-2
+
+
+
+        elif key == Keys.UP_KEY:
+            if self.is_focus:
+                if self.zoom >= 0.05:
+                    self.zoom /=2
+
+
+        elif key == Keys.DOWN_KEY:
+            if self.is_focus:
+                if self.zoom*2 <= 1:
+                    self.zoom*=2
+            if self.is_focus:
+                if self.zoom*2 <= 1:
+                    self.zoom*=2
+
+        elif key == Keys.R_KEY:
+            if self.is_focus:
+                self.zoom = 1
+                self.zoomx = 0
+                self.zoomy = 0
+
+        self.update()
 
 
     def mousePressEvent(self,event):
