@@ -7,7 +7,7 @@ from PyQt6.QtGui import *
 
 from PyQt6.QtWidgets import *
 
-from visualizer.setting_widget import *
+
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *

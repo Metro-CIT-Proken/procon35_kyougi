@@ -10,7 +10,7 @@ class CellColorsWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.index = 0
-        self.layout = QHBoxLayout(self)
+        self.layout = QVBoxLayout(self)
         self.button_list = []
         self.color_list = [QColor(255, 0, 0), QColor(0, 0, 255), QColor(0, 255, 0), QColor(255, 255, 0), QColor(167, 87, 168)]
 
