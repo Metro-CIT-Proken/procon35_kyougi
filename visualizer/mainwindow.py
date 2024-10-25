@@ -12,7 +12,7 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
 
-from setting_widget import *
+# from setting_widget import *
 
 
 
@@ -22,7 +22,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle('Test GUI')
         self.setGeometry(300, 50, 1200, 1200)
-        self.widget = SettingWidget(self)
+        # self.widget = SettingWidget(self)
+        self.widget = MainWidget(self)
 
 
 

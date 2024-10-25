@@ -8,6 +8,8 @@ class Config:
         self.file_path = file_path
         self.solvers = []
         self.pcs=[]
+        self.cell_colors = [[255, 0, 0], [0, 0, 255], [0, 255, 0], [255, 255, 0], [167, 87, 168]]
+        self.timer_intervals = 1.0
 
 
     def save(self):
@@ -16,7 +18,9 @@ class Config:
             "port":self.port,
             "token":self.token,
             "solvers":self.solvers,
-            "pcs":self.pcs
+            "pcs":self.pcs,
+            "cell_colors": self.cell_colors,
+            "timer_intervals": self.timer_intervals
         }
 
         json_data = json.dumps(config_json)
@@ -34,6 +38,8 @@ class Config:
         self.token = json_data["token"]
         self.solvers = json_data["solvers"]
         self.pcs = json_data["pcs"]
+        self.cell_colors = json_data["cell_colors"]
+        self.timer_intervals = json_data["timer_intervals"]
 
     def ip_address_edited(self,text):
         self.ip_address = text
@@ -43,6 +49,9 @@ class Config:
 
     def token_edited(self,text):
         self.token = text
+
+    def timer_edited(self, text):
+        self.timer_intervals = text
 
 
 
