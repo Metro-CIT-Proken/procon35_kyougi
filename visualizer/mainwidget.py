@@ -665,6 +665,7 @@ class MainWidget(QWidget):
 
     def update_widget(self):
         if not(self.widgets_list == []):
+            print("AAAAAAAAAAA")
             self.glwidget_info = self.decide_focus_widget()
 
 
@@ -717,9 +718,6 @@ class MainWidget(QWidget):
     def make_first_widget(self):
         self.first_widgets_dict = WidgetDict()
         start_board = [row[:] for row in self.get_pro.start_board]
-
-
-
 
         goal_board = [row[:] for row in self.get_pro.goal_board]
 
