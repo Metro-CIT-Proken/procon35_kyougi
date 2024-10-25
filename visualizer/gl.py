@@ -126,9 +126,13 @@ class OpenGLWidget(QOpenGLWidget):
                         return search_board[next_h][next_w]
 
     def paintGL(self):
-        print("paint gl")
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        glColor3f(1.0, 0.0, 0.0)# 色を赤に設定
+
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        glPushMatrix()
+        
+        glColor3f(1.0, 1.0, 1.0)# 色を赤に設定
 
         glRasterPos2f(0.0,0.0)
         width_square = len(self.board[0])
@@ -141,9 +145,9 @@ class OpenGLWidget(QOpenGLWidget):
             sy = 1
         first = FIRST/TRANSLATE_GL
         s = min(sx,sy)
-        glMatrixMode(GL_MODELVIEW)
-        glLoadIdentity()
-        glPushMatrix()
+        # glMatrixMode(GL_MODELVIEW)
+        # glLoadIdentity()
+        # glPushMatrix()
 
         first = 0
         self.b_hei = len(self.board)

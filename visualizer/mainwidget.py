@@ -31,10 +31,14 @@ MARGIN_LEFT = 10
 MARGIN_TOP = 10
 MARGIN_RIGHT = 10
 MARGIN_BOTTOM = 10
+SETTING_WIDTH = 1
+SOLVER_WIDTH = 2
 
 class Color(Enum):
     NORMAL = 1
     DISTANCE = 2
+
+
 
 class Arg(Enum):
     NONE = 1
@@ -50,6 +54,16 @@ class MainWidget(QWidget):
         # refactor: 変数の名前をもっと具体的に
         # refactor: 色モードの指定はenumを使う
         self.args = sys.argv
+
+
+        self.timer_is_running = False
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.time_move)
+        # self.timer.start(1000)
+
+        painter = QPainter(self)
+
+        
 
 
         self.color_mode = Color.NORMAL
@@ -83,7 +97,6 @@ class MainWidget(QWidget):
 
 
 
-
         self.one_get = False
 
         self.widgets_list = []#scroll widget 内にある widgetのリスト
@@ -108,10 +121,11 @@ class MainWidget(QWidget):
 
 
         layout.setContentsMargins(MARGIN_LEFT, MARGIN_TOP, MARGIN_RIGHT, MARGIN_BOTTOM)
-        layout.addLayout(layout_settings, 1)
+        # layout.addLayout(layout_settings, 1)
+        layout.addLayout(layout_settings, SETTING_WIDTH)
         layout_settings.addLayout(self.first_gl_layout)
         layout_settings.addLayout(layout_cont)
-        layout.addLayout(self.layout_gl, 2)
+        layout.addLayout(self.layout_gl, SOLVER_WIDTH)
 
         self.container_layout = QVBoxLayout()
         self.container_widget = QWidget()
@@ -123,11 +137,7 @@ class MainWidget(QWidget):
         # self.dis_board = [[0 for x in range(self.b_wid)]for y in range(self.b_hei)]
         self.idx = 0
 
-        self.opTimerCallback
-        self.timer = QTimer()
-        self.timer_oth = QTimer()
-        self.timer.setInterval(500)
-        self.timer.timeout.connect(self.opTimerCallback)
+
         self.op_idx = 0#何番目手か
         self.right_key_check = False
         self.config = Config("config.json")
@@ -174,6 +184,10 @@ class MainWidget(QWidget):
 
         self.add_pc_address_button = QPushButton("PCのアドレスを追加する")
         self.remove_pc_address_button = QPushButton("PCのアドレスを削除する")
+
+        self.timer_line = QLabel("タイマーの秒数")
+        self.timer_line.setFixedSize(100,20)
+        self.timer_edit = QLineEdit(self)
 
 
 
@@ -244,7 +258,6 @@ class MainWidget(QWidget):
             text_solver = QLineEdit(solver)
             self.solver_layout.addWidget(text_solver)
 
-        print(self.config.pcs)
         for pc in self.config.pcs:
             pc_address_line_layout = QHBoxLayout()
             add_pc_address_check = QCheckBox()
@@ -257,6 +270,9 @@ class MainWidget(QWidget):
             pc_address_line_layout.addWidget(add_pc_address_check)
             pc_address_line_layout.addWidget(add_pc_address_line)
             pc_address_line_layout.addWidget(add_pc_solver_line)
+
+            layout_cont.addWidget(self.timer_line)
+            layout_cont.addWidget(self.timer_edit)
 
 
             # layout_button.addWidget(self.post_button)
@@ -292,15 +308,30 @@ class MainWidget(QWidget):
         elif event.key() == Qt.Key.Key_Left and not(self.op_idx == 0):
                 self.right_key_check = self.applyOn(self.op_idx-1)
 
+        elif event.key() == Qt.Key.Key_Space :
+            self.back = False
+            if self.one_get:
+                if self.timer_is_running:
+                    self.timer.stop()
+                else:
+                    try:
+                        interval_time = int(float(self.timer_edit.text())*1000)
+                        if interval_time  < 0:
+                            self.back = True
+                            interval_time = interval_time * -1
+                        self.timer.start(interval_time)
+                    except TypeError:
+                        print("不正な値です")
+                self.timer_is_running = not(self.timer_is_running)
 
-        self.glwidget.keyPressEvent(event)
-        self.glwidget_goal.keyPressEvent(event)
 
-    #0.5秒ごとに進む・戻る
-    def opTimerCallback(self):
-        self.applyOn(self.op_idx+1)
-        if self.op_idx == self.answer_num:
-                self.timer.stop()
+
+            try:
+                self.glwidget.keyPressEvent(event)
+                self.glwidget_goal.keyPressEvent(event)
+            except AttributeError:
+                pass
+
 
     def print_distance_board(self):
         self.dis_board = [[self.search_near_goal(x,y) for x in range(self.glwidget_info["board_width"])]for y in range(self.glwidget_info["board_width"])]
@@ -423,25 +454,33 @@ class MainWidget(QWidget):
         self.config.save()
 
     def on_answer_created(self, answer):
-        print("on_answer_created")
-        print(answer)
         self.answers_list.append(answer)
         self.on_answer_added()
         return answer
 
     # refactor: 長いのでもっと処理ごとに関数にわける
     def get(self):
+
+
             if self.one_get:
-                    for widget in self.widgets_list:
+
+                for widget in self.widgets_list:
                         self.scroll_area.scroll_area_layout.removeWidget(widget.double_widget)
                         widget.double_widget.deleteLater()
-                    self.widgets_list = []
-                    self.first_gl_layout.removeWidget(self.first_double_widget)
-                    self.first_double_widget.deleteLater()
+                self.first_gl_layout.removeWidget(self.first_double_widget)
+                self.first_double_widget.deleteLater()
+                self.widgets_list = []
 
             self.get_process()
 
-   
+            # print("***************:::widget_list:::**********")
+            # print(self.widgets_list)
+            # print("**********************************************")
+
+
+
+
+
 
 
 
@@ -449,6 +488,7 @@ class MainWidget(QWidget):
                     self.message.setText("取得成功です")
             elif  self.get_pro.status_code == 100:
                     self.message.setText("ソルバー取得成功")
+
 
 
             print("status 200")
@@ -473,9 +513,9 @@ class MainWidget(QWidget):
 
 
     def on_answer_added(self):
-        for i in range(len(self.widgets_list),len(self.answers_list)):
+        for i in range(len(self.answers_list)):
             widgets_dict = WidgetDict()
-            self.widgets_list.append(widgets_dict)
+
 
 
             self.op_idx = 0
@@ -490,11 +530,7 @@ class MainWidget(QWidget):
 
 
             widgets_dict.answer = self.answers_list[i]
-            print("answers_list")
-            print(self.answers_list)
 
-            print("widgets_dict.answer")
-            print(widgets_dict.answer)
 
 
             dis_board = [[0 for _ in range(b_wid)]for _ in range(b_hei)]
@@ -506,8 +542,8 @@ class MainWidget(QWidget):
             goal_board =  [row[:] for row in self.get_pro.goal_board]
             widgets_dict.goal_board = goal_board
 
-            zoom = widgets_dict.zoom
-            zoom_direction = widgets_dict.zoom_direction
+            zoom = 1
+            zoom_direction = 0
 
             start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.color_mode == Color.DISTANCE, self)
             widgets_dict.start_widget = start_gl_board
@@ -530,11 +566,17 @@ class MainWidget(QWidget):
             double_widget.slider.valueChanged.connect(self.SliderChange)
 
             double_widget.op_idx = 0
-            print("widgets_dict.answer.n")
-            print(widgets_dict.answer)
+
             double_widget.answer_num = widgets_dict.answer["n"]
             widgets_dict.double_widget = double_widget
             self.container_layout.addWidget(double_widget)
+
+            self.widgets_list.append(widgets_dict)
+
+            print("***************:::widget_list:::**********")
+            print(self.widgets_list[0].list)
+            print("**********************************************")
+
 
 
     def decide_focus_widget(self):
@@ -717,17 +759,30 @@ class MainWidget(QWidget):
     def get_process(self):
         if self.arg_len == Arg.ONE:
                     self.get_pro = GetByHand(self.problem)
-                    print("hand problem")
-                    print(self.get_pro.problem)
+
         else:
                     self.get_pro = Get(self.config)
 
         if self.get_pro.status_code== 200 or self.get_pro.status_code == 100:
-                    self.answers_list = [ ]
+                    self.answers_list = []
                     # if self.arg_two:
                     if self.arg_len == Arg.TWO:
                         self.on_answer_created(self.file_answer)
                     else:
                         self.addPcSolver()
                     self.addExecSolver()
+
+    def time_move(self):
+        print(self.back)
+        if self.back == True :
+            if not(self.op_idx == 0):
+                self.applyOn(self.op_idx-1)
+            else:
+                self.timer.stop()
+        else:
+            if not(self.op_idx == self.answer_num):
+                self.applyOn(self.op_idx+1)
+            else:
+                self.timer.stop()
+
 
