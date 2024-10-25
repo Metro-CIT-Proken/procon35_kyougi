@@ -1,4 +1,5 @@
 from PyQt6.QtCore import *
+from PyQt6.QtGui import *
 from PyQt6.QtWidgets import QApplication, QWidget
 from enum import Enum
 
@@ -36,7 +37,7 @@ class Keys(Enum):
     E_KEY = 8
 
 class OpenGLWidget(QOpenGLWidget):
-    def __init__(self,board,goal_board,zoom,zoom_direction,xtext_int=None,ytext_int=None,fournflag=None,parent=None):
+    def __init__(self,board,goal_board,zoom,zoom_direction,color_list,xtext_int=None,ytext_int=None,fournflag=None,parent=None):
         super().__init__(parent)
         self.is_focus = False
         self.board = board
@@ -52,6 +53,12 @@ class OpenGLWidget(QOpenGLWidget):
         self.ytext_int = ytext_int
         self.yazirusi = ""
         self.fournflag = fournflag
+        color_list = color_list
+        self.zero_color = color_list[0]
+        self.one_color = color_list[1]
+        self.two_color = color_list[2]
+        self.three_color = color_list[3]
+        self.same_color = color_list[4]
         self.is_focus = False
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.textures = {}
@@ -131,7 +138,7 @@ class OpenGLWidget(QOpenGLWidget):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         glPushMatrix()
-        
+
         glColor3f(1.0, 1.0, 1.0)# 色を赤に設定
 
         glRasterPos2f(0.0,0.0)
@@ -175,15 +182,34 @@ class OpenGLWidget(QOpenGLWidget):
 
                 else:
                     if self.board[i][j] == self.goal_board[i][j] :
-                        glColor3f(167/255,87/255,168/255)
+                        # glColor3f(167/255,87/255,168/255)
+                        red = QColor(self.same_color).red()/255
+                        green = QColor(self.same_color).green()/255
+                        blue = QColor(self.same_color).blue()/255
+                        glColor3f(red,green,blue)
                     elif self.board[i][j] == 0 :
-                        glColor3f(1.0, 0.0, 0.0)
+                        red = QColor(self.zero_color).red()/255
+                        green = QColor(self.zero_color).green()/255
+                        blue = QColor(self.zero_color).blue()/255
+                        # glColor3f(1.0, 0.0, 0.0)
+                        glColor3f(red, green, blue)
                     elif self.board[i][j] == 1 :
-                        glColor3f(0.0,0.0,1.0)
+                        red = QColor(self.one_color).red()/255
+                        green = QColor(self.one_color).green()/255
+                        blue = QColor(self.one_color).blue()/255
+                        # glColor3f(0.0,0.0,1.0)
+                        glColor3f(red, green ,blue)
                     elif self.board[i][j] == 2 :
-                        glColor3f(0.0,1.0,0.0)
+                        red = QColor(self.two_color).red()/255
+                        green = QColor(self.two_color).green()/255
+                        blue = QColor(self.two_color).blue()/255
+                        glColor3f(red,green,blue)
                     elif self.board[i][j] == 3 :
-                        glColor3f(1.0,1.0,0.0)
+                        red = QColor(self.three_color).red()/255
+                        green = QColor(self.three_color).green()/255
+                        blue = QColor(self.three_color).blue()/255
+                        glColor3f(red,green,blue)
+                        # glColor3f(1.0,1.0,0.0)
 
                 glVertex2f(first+(j*s),first+(i*s))#上縦の線
                 glVertex2f(first+((j+1)*s),first+(i*s))
@@ -191,27 +217,27 @@ class OpenGLWidget(QOpenGLWidget):
                 glVertex2f(first+(j*s),first+((i+1)*s))
         glEnd()
 
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable(GL_TEXTURE_2D)
-        for i in range(height_square):
-            for j in range(width_square):
-                glBindTexture(GL_TEXTURE_2D, self.textures[str(self.board[i][j])])
+        # glEnable(GL_BLEND)
+        # glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        # glEnable(GL_TEXTURE_2D)
+        # for i in range(height_square):
+        #     for j in range(width_square):
+        #         glBindTexture(GL_TEXTURE_2D, self.textures[str(self.board[i][j])])
 
-                glBegin(GL_QUADS)
-                glTexCoord2f(0, 1)
-                glVertex2f(first+(j*s), first+(i*s))
+        #         glBegin(GL_QUADS)
+        #         glTexCoord2f(0, 1)
+        #         glVertex2f(first+(j*s), first+(i*s))
 
-                glTexCoord2f(1, 1)
-                glVertex2f(first+((j+1)*s), first+(i*s))
+        #         glTexCoord2f(1, 1)
+        #         glVertex2f(first+((j+1)*s), first+(i*s))
 
-                glTexCoord2f(1, 0)
-                glVertex2f(first+((j+1)*s),first+((i+1)*s))
+        #         glTexCoord2f(1, 0)
+        #         glVertex2f(first+((j+1)*s),first+((i+1)*s))
 
-                glTexCoord2f(0, 0)
-                glVertex2f(first+(j*s), first+((i+1)*s))
-                glEnd()
-        glDisable(GL_TEXTURE_2D)
+        #         glTexCoord2f(0, 0)
+        #         glVertex2f(first+(j*s), first+((i+1)*s))
+        #         glEnd()
+        # glDisable(GL_TEXTURE_2D)
         glPopMatrix()
         glFlush()
         glutSwapBuffers()

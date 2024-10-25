@@ -16,6 +16,7 @@ from scroll_widget import *
 from exec_solver import *
 from external_solver import *
 import time
+from cell_colors  import *
 
 
 
@@ -60,10 +61,18 @@ class MainWidget(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.time_move)
         # self.timer.start(1000)
+        self.cell_colors_widget = CellColorsWidget()
 
-        painter = QPainter(self)
+        # self.zero_color = QColor(255, 0, 0)
+        # self.one_color = QColor(0, 0, 255)
+        # self.two_color  = QColor(0, 255, 0)
+        # self.three_color = QColor(255, 255, 0)
+        # self.same_color = QColor(167, 87, 168)
 
-        
+
+
+
+
 
 
         self.color_mode = Color.NORMAL
@@ -203,6 +212,8 @@ class MainWidget(QWidget):
 
         self.layout_gl.addWidget(self.scroll_area)
 
+
+
         self.error = 0
         # if self.args[2] == "a":#自動で移動する場合
         ip_address_label = QLabel("IPアドレス")
@@ -216,6 +227,9 @@ class MainWidget(QWidget):
 
         layout_text = QVBoxLayout()
         layout_cont.addLayout(layout_text)
+
+
+        layout_cont.addWidget(self.cell_colors_widget)
         layout_text.addWidget(ip_address_label)
         layout_text.addWidget(self.ip_address_line)
         layout_text.addWidget(port_label)
@@ -285,6 +299,13 @@ class MainWidget(QWidget):
                 self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
                 self.slider.valueChanged.connect(self.onSliderChange)
                 layout_cont.addWidget(self.slider)
+
+
+
+
+
+
+
 
 
     def mousePressEvent(self, event: QMouseEvent):#マウスを押した座標を取得
@@ -544,12 +565,12 @@ class MainWidget(QWidget):
 
             zoom = 1
             zoom_direction = 0
-
-            start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, None, None, self.color_mode == Color.DISTANCE, self)
+            self.color_list = self.cell_colors_widget.color_list
+            start_gl_board = OpenGLWidget(start_board, goal_board, zoom, zoom_direction, self.color_list , None, None, self.color_mode == Color.DISTANCE, self)
             widgets_dict.start_widget = start_gl_board
             start_gl_board.resize(int((self.width()*2/3)/2-40), int((self.width()*2/3)/2-40))
 
-            goal_gl_board = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, self)
+            goal_gl_board = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, self.color_list, self)
             widgets_dict.goal_widget = goal_gl_board
 
 
@@ -714,9 +735,10 @@ class MainWidget(QWidget):
 
 
         if start_board != [[]] or goal_board != [[]]:
-            first_start_gl = OpenGLWidget(start_board, goal_board, zoom , zoom_direction, None, None, self.color_mode == Color.DISTANCE, self)
+            self.color_list = self.cell_colors_widget.color_list
+            first_start_gl = OpenGLWidget(start_board, goal_board, zoom , zoom_direction, self.color_list, None, None, self.color_mode == Color.DISTANCE, self)
             self.first_widgets_dict.start_widget = first_start_gl
-            first_goal_gl = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, None, None, False, self)
+            first_goal_gl = OpenGLWidget(goal_board, [[ -1 for _ in range(b_wid)]for _ in range(b_hei)], zoom, zoom_direction, self.color_list, None, None, False, self)
             self.first_widgets_dict.goal_widget = first_goal_gl
 
             first_double_widget = FirstDoubleWidget(first_start_gl, first_goal_gl)
@@ -773,7 +795,6 @@ class MainWidget(QWidget):
                     self.addExecSolver()
 
     def time_move(self):
-        print(self.back)
         if self.back == True :
             if not(self.op_idx == 0):
                 self.applyOn(self.op_idx-1)
