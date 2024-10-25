@@ -211,10 +211,14 @@ class OpenGLWidget(QOpenGLWidget):
                         glColor3f(red,green,blue)
                         # glColor3f(1.0,1.0,0.0)
 
-                glVertex2f(first+(j*s),first+(i*s))#上縦の線
-                glVertex2f(first+((j+1)*s),first+(i*s))
-                glVertex2f(first+((j+1)*s),first+((i+1)*s))
-                glVertex2f(first+(j*s),first+((i+1)*s))
+                # glVertex2f(first+(j*s),first+(i*s))#上縦の線
+                # glVertex2f(first+((j+1)*s),first+(i*s))
+                # glVertex2f(first+((j+1)*s),first+((i+1)*s))
+                # glVertex2f(first+(j*s),first+((i+1)*s))
+                glVertex2f(first+((width_square-2-j)*s),first+((height_square-2-i)*s))#上縦の線
+                glVertex2f(first+((width_square-1-j)*s),first+((height_square-2-i)*s))
+                glVertex2f(first+((width_square-1-j)*s),first+((height_square-1-i)*s))
+                glVertex2f(first+((width_square-2-j)*s),first+((height_square-1-i)*s))
         glEnd()
 
         # glEnable(GL_BLEND)

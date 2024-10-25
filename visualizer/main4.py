@@ -7,7 +7,11 @@ from PyQt6.QtGui import *
 
 from PyQt6.QtWidgets import *
 
+<<<<<<< HEAD
 
+=======
+# from visualizer.setting_widget import *
+>>>>>>> tanaka_sub
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *

@@ -55,23 +55,22 @@ class MainWidget(QWidget):
         # refactor: 変数の名前をもっと具体的に
         # refactor: 色モードの指定はenumを使う
         self.args = sys.argv
+        self.config = Config("config.json")
 
+        try:
+            self.config.load()
+        except:
+            pass
 
         self.timer_is_running = False
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.time_move)
-        # self.timer.start(1000)
-        self.cell_colors_widget = CellColorsWidget()
 
-        # self.zero_color = QColor(255, 0, 0)
-        # self.one_color = QColor(0, 0, 255)
-        # self.two_color  = QColor(0, 255, 0)
-        # self.three_color = QColor(255, 255, 0)
-        # self.same_color = QColor(167, 87, 168)
+        self.cell_colors_widget = CellColorsWidget()#
 
-
-
-
+        for i in range(len(self.config.cell_colors)):
+            self.cell_colors_widget.color_list[i] = QColor(*self.config.cell_colors[i])
+            print(self.cell_colors_widget.color_list[i].red(), self.cell_colors_widget.color_list[i].green(), self.cell_colors_widget.color_list[i].blue())
 
 
 
@@ -122,7 +121,7 @@ class MainWidget(QWidget):
         self.glwidget_info = {}
 
         layout = QHBoxLayout(self)
-        layout_settings = QVBoxLayout()
+        layout_settings = QVBoxLayout()#
         self.first_gl_layout = QHBoxLayout()
         layout_cont = QVBoxLayout()
         self.layout_gl = QHBoxLayout()
@@ -149,11 +148,8 @@ class MainWidget(QWidget):
 
         self.op_idx = 0#何番目手か
         self.right_key_check = False
-        self.config = Config("config.json")
-        try:
-            self.config.load()
-        except:
-            pass
+
+
         self.dict_action = {0:"上", 1:"下", 2:"左", 3:"右"}
         self.dic_dir = ["上", "下", "左", "右"]
         check_int = True
@@ -171,8 +167,8 @@ class MainWidget(QWidget):
 
         self.ip_address_line = QLineEdit(self)
         self.ip_address_line.setText(self.config.ip_address)
-
         self.ip_address_line.textEdited.connect(self.config.ip_address_edited)
+
         self.port_line = QLineEdit(self)
         self.port_line.setText(str(self.config.port))
         self.port_line.textEdited.connect(self.config.port_edited)
@@ -197,6 +193,8 @@ class MainWidget(QWidget):
         self.timer_line = QLabel("タイマーの秒数")
         self.timer_line.setFixedSize(100,20)
         self.timer_edit = QLineEdit(self)
+        self.timer_edit.setText(str(self.config.timer_intervals))
+        self.timer_edit.textEdited.connect(self.config.timer_edited)
 
 
 
@@ -471,6 +469,12 @@ class MainWidget(QWidget):
             self.config.pcs[i]["ip_address"] = pc_address_widget.text()
             self.config.pcs[i]["solver"] = pc_solver_widget.text()
 
+        self.color_list = self.cell_colors_widget.color_list
+        for i in range(len(self.color_list)):
+            self.config.cell_colors[i][0] = QColor(self.color_list[i]).red()
+            self.config.cell_colors[i][1] = QColor(self.color_list[i]).green()
+            self.config.cell_colors[i][2] = QColor(self.color_list[i]).blue()
+
 
         self.config.save()
 
@@ -661,6 +665,7 @@ class MainWidget(QWidget):
 
     def update_widget(self):
         if not(self.widgets_list == []):
+            print("AAAAAAAAAAA")
             self.glwidget_info = self.decide_focus_widget()
 
 
@@ -713,9 +718,6 @@ class MainWidget(QWidget):
     def make_first_widget(self):
         self.first_widgets_dict = WidgetDict()
         start_board = [row[:] for row in self.get_pro.start_board]
-
-
-
 
         goal_board = [row[:] for row in self.get_pro.goal_board]
 
