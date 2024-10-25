@@ -17,4 +17,13 @@ class SettingWidget(QWidget):
         super().__init__(parent)
 
         self.args = sys.argv
+        layout = QVBoxLayout(self)
+        layout_cont = QVBoxLayout()
+
+        layout.addLayout(layout_cont)
+
         self.cell_colors_widget = CellColorsWidget()
+
+        self.ip_address_line = QLineEdit(self)
+        self.ip_address_line.setText(self.config.ip_address_edited)
+        

@@ -60,14 +60,9 @@ class MainWidget(QWidget):
         self.timer_is_running = False
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.time_move)
-        # self.timer.start(1000)
-        self.cell_colors_widget = CellColorsWidget()
 
-        # self.zero_color = QColor(255, 0, 0)
-        # self.one_color = QColor(0, 0, 255)
-        # self.two_color  = QColor(0, 255, 0)
-        # self.three_color = QColor(255, 255, 0)
-        # self.same_color = QColor(167, 87, 168)
+        self.cell_colors_widget = CellColorsWidget()#
+
 
 
 
@@ -122,7 +117,7 @@ class MainWidget(QWidget):
         self.glwidget_info = {}
 
         layout = QHBoxLayout(self)
-        layout_settings = QVBoxLayout()
+        layout_settings = QVBoxLayout()#
         self.first_gl_layout = QHBoxLayout()
         layout_cont = QVBoxLayout()
         self.layout_gl = QHBoxLayout()
