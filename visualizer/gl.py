@@ -181,13 +181,13 @@ class OpenGLWidget(QOpenGLWidget):
 
 
                 else:
-                    if self.board[i][j] == self.goal_board[i][j] :
-                        # glColor3f(167/255,87/255,168/255)
-                        red = QColor(self.same_color).red()/255
-                        green = QColor(self.same_color).green()/255
-                        blue = QColor(self.same_color).blue()/255
-                        glColor3f(red,green,blue)
-                    elif self.board[i][j] == 0 :
+                    # if self.board[i][j] == self.goal_board[i][j] :
+                    #     # glColor3f(167/255,87/255,168/255)
+                    #     red = QColor(self.same_color).red()/255
+                    #     green = QColor(self.same_color).green()/255
+                    #     blue = QColor(self.same_color).blue()/255
+                    #     glColor3f(red,green,blue)
+                    if self.board[i][j] == 0 :
                         red = QColor(self.zero_color).red()/255
                         green = QColor(self.zero_color).green()/255
                         blue = QColor(self.zero_color).blue()/255

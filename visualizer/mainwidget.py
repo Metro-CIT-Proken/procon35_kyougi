@@ -66,7 +66,7 @@ class MainWidget(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.time_move)
 
-        self.cell_colors_widget = CellColorsWidget()#
+        self.cell_colors_widget = CellColorsWidget(self.config)#
 
         for i in range(len(self.config.cell_colors)):
             self.cell_colors_widget.color_list[i] = QColor(*self.config.cell_colors[i])
@@ -798,14 +798,16 @@ class MainWidget(QWidget):
 
     def time_move(self):
         if self.back == True :
-            if not(self.op_idx == 0):
-                self.applyOn(self.op_idx-1)
+            if not(self.op_idx-300 <= 0):
+                self.applyOn(self.op_idx-300)
             else:
+                self.applyOn(0)
                 self.timer.stop()
         else:
-            if not(self.op_idx == self.answer_num):
-                self.applyOn(self.op_idx+1)
+            if not(self.op_idx+300 >= self.answer_num):
+                self.applyOn(self.op_idx+300)
             else:
+                self.applyOn(self.answer_num)
                 self.timer.stop()
 
 

@@ -7,12 +7,20 @@ from PyQt6.QtWidgets import *
 
 
 class CellColorsWidget(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, config, parent=None):
         super().__init__(parent)
+        self.config = config
         self.index = 0
         self.layout = QVBoxLayout(self)
         self.button_list = []
-        self.color_list = [QColor(255, 0, 0), QColor(0, 0, 255), QColor(0, 255, 0), QColor(255, 255, 0), QColor(167, 87, 168)]
+        self.color_list = []
+
+        try:
+            for i in range(len(self.config.cell_colors)):
+                self.color_list.append(QColor(*self.config.cell_colors[i]))
+        except:
+            print("error")
+            self.color_list = [QColor(255, 0, 0), QColor(0, 0, 255), QColor(0, 255, 0), QColor(255, 255, 0), QColor(167, 87, 168)]
 
         for i in range(5):
 
